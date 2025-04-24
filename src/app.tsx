@@ -4,6 +4,9 @@ import { useAgentChat } from "agents/ai-react";
 import type { Message } from "@ai-sdk/react";
 import { APPROVAL } from "./shared";
 import type { tools } from "./tools";
+import ReactMarkdown from "react-markdown";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { atomDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 // Component imports
 import { Button } from "@/components/button/Button";
@@ -21,11 +24,15 @@ import {
   Robot,
   Sun,
   Trash,
+  List,
+  X,
+  Info,
 } from "@phosphor-icons/react";
 
 // List of tools that require human confirmation
 const toolsRequiringConfirmation: (keyof typeof tools)[] = [
-  "getWeatherInformation",
+  "createBooking",
+  "updateBooking",
 ];
 
 export default function Chat() {
@@ -35,6 +42,7 @@ export default function Chat() {
     return (savedTheme as "dark" | "light") || "dark";
   });
   const [showDebug, setShowDebug] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
@@ -101,295 +109,424 @@ export default function Chat() {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
+  const toggleDrawer = () => {
+    setDrawerOpen(!drawerOpen);
+  };
+
   return (
-    <div className="h-[100vh] w-full p-4 flex justify-center items-center bg-fixed overflow-hidden">
+    <div className="h-screen w-full flex flex-col bg-fixed overflow-hidden bg-white dark:bg-gray-950">
       <HasOpenAIKey />
-      <div className="h-[calc(100vh-2rem)] w-full mx-auto max-w-lg flex flex-col shadow-xl rounded-md overflow-hidden relative border border-neutral-300 dark:border-neutral-800">
-        <div className="px-4 py-3 border-b border-neutral-300 dark:border-neutral-800 flex items-center gap-3 sticky top-0 z-10">
-          <div className="flex items-center justify-center h-8 w-8">
-            <svg
-              width="28px"
-              height="28px"
-              className="text-[#F48120]"
-              data-icon="agents"
+
+      {/* Layout Container */}
+      <div className="flex flex-1 h-full overflow-hidden">
+        {/* Overlay for mobile */}
+        {drawerOpen && (
+          <div 
+            className="fixed inset-0 bg-black/20 dark:bg-black/50 z-20 lg:hidden"
+            onClick={toggleDrawer}
+          />
+        )}
+
+        {/* Drawer/Sidebar */}
+        <div 
+          className={`fixed lg:relative w-64 h-full z-30 transform transition-transform duration-300 ease-in-out ${
+            drawerOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          } bg-neutral-50 dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-800 shadow-lg lg:shadow-none`}
+        >
+          <div className="flex items-center justify-between h-16 px-4 border-b border-neutral-200 dark:border-neutral-800">
+            <div className="flex items-center">
+              <div className="flex items-center justify-center h-8 w-8 mr-2">
+                <svg
+                  width="28px"
+                  height="28px"
+                  className="text-[#F48120]"
+                  data-icon="agents"
+                >
+                  <title>Mymediset</title>
+                  <symbol id="ai:local:agents" viewBox="0 0 80 79">
+                    <path
+                      fill="currentColor"
+                      d="M69.3 39.7c-3.1 0-5.8 2.1-6.7 5H48.3V34h4.6l4.5-2.5c1.1.8 2.5 1.2 3.9 1.2 3.8 0 7-3.1 7-7s-3.1-7-7-7-7 3.1-7 7c0 .9.2 1.8.5 2.6L51.9 30h-3.5V18.8h-.1c-1.3-1-2.9-1.6-4.5-1.9h-.2c-1.9-.3-3.9-.1-5.8.6-.4.1-.8.3-1.2.5h-.1c-.1.1-.2.1-.3.2-1.7 1-3 2.4-4 4 0 .1-.1.2-.1.2l-.3.6c0 .1-.1.1-.1.2v.1h-.6c-2.9 0-5.7 1.2-7.7 3.2-2.1 2-3.2 4.8-3.2 7.7 0 .7.1 1.4.2 2.1-1.3.9-2.4 2.1-3.2 3.5s-1.2 2.9-1.4 4.5c-.1 1.6.1 3.2.7 4.7s1.5 2.9 2.6 4c-.8 1.8-1.2 3.7-1.1 5.6 0 1.9.5 3.8 1.4 5.6s2.1 3.2 3.6 4.4c1.3 1 2.7 1.7 4.3 2.2v-.1q2.25.75 4.8.6h.1c0 .1.1.1.1.1.9 1.7 2.3 3 4 4 .1.1.2.1.3.2h.1c.4.2.8.4 1.2.5 1.4.6 3 .8 4.5.7.4 0 .8-.1 1.3-.1h.1c1.6-.3 3.1-.9 4.5-1.9V62.9h3.5l3.1 1.7c-.3.8-.5 1.7-.5 2.6 0 3.8 3.1 7 7 7s7-3.1 7-7-3.1-7-7-7c-1.5 0-2.8.5-3.9 1.2l-4.6-2.5h-4.6V48.7h14.3c.9 2.9 3.5 5 6.7 5 3.8 0 7-3.1 7-7s-3.1-7-7-7m-7.9-16.9c1.6 0 3 1.3 3 3s-1.3 3-3 3-3-1.3-3-3 1.4-3 3-3m0 41.4c1.6 0 3 1.3 3 3s-1.3 3-3 3-3-1.3-3-3 1.4-3 3-3M44.3 72c-.4.2-.7.3-1.1.3-.2 0-.4.1-.5.1h-.2c-.9.1-1.7 0-2.6-.3-1-.3-1.9-.9-2.7-1.7-.7-.8-1.3-1.7-1.6-2.7l-.3-1.5v-.7q0-.75.3-1.5c.1-.2.1-.4.2-.7s.3-.6.5-.9c0-.1.1-.1.1-.2.1-.1.1-.2.2-.3s.1-.2.2-.3c0 0 0-.1.1-.1l.6-.6-2.7-3.5c-1.3 1.1-2.3 2.4-2.9 3.9-.2.4-.4.9-.5 1.3v.1c-.1.2-.1.4-.1.6-.3 1.1-.4 2.3-.3 3.4-.3 0-.7 0-1-.1-2.2-.4-4.2-1.5-5.5-3.2-1.4-1.7-2-3.9-1.8-6.1q.15-1.2.6-2.4l.3-.6c.1-.2.2-.4.3-.5 0 0 0-.1.1-.1.4-.7.9-1.3 1.5-1.9 1.6-1.5 3.8-2.3 6-2.3q1.05 0 2.1.3v-4.5c-.7-.1-1.4-.2-2.1-.2-1.8 0-3.5.4-5.2 1.1-.7.3-1.3.6-1.9 1s-1.1.8-1.7 1.3c-.3.2-.5.5-.8.8-.6-.8-1-1.6-1.3-2.6-.2-1-.2-2 0-2.9.2-1 .6-1.9 1.3-2.6.6-.8 1.4-1.4 2.3-1.8l1.8-.9-.7-1.9c-.4-1-.5-2.1-.4-3.1s.5-2.1 1.1-2.9q.9-1.35 2.4-2.1c.9-.5 2-.8 3-.7.5 0 1 .1 1.5.2 1 .2 1.8.7 2.6 1.3s1.4 1.4 1.8 2.3l4.1-1.5c-.9-2-2.3-3.7-4.2-4.9q-.6-.3-.9-.6c.4-.7 1-1.4 1.6-1.9.8-.7 1.8-1.1 2.9-1.3.9-.2 1.7-.1 2.6 0 .4.1.7.2 1.1.3V72zm25-22.3c-1.6 0-3-1.3-3-3 0-1.6 1.3-3 3-3s3 1.3 3 3c0 1.6-1.3 3-3 3"
+                    />
+                  </symbol>
+                  <use href="#ai:local:agents" />
+                </svg>
+              </div>
+              <h2 className="font-semibold text-base">Mymediset</h2>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              shape="square"
+              className="rounded-full lg:hidden"
+              onClick={toggleDrawer}
             >
-              <title>Cloudflare Agents</title>
-              <symbol id="ai:local:agents" viewBox="0 0 80 79">
-                <path
-                  fill="currentColor"
-                  d="M69.3 39.7c-3.1 0-5.8 2.1-6.7 5H48.3V34h4.6l4.5-2.5c1.1.8 2.5 1.2 3.9 1.2 3.8 0 7-3.1 7-7s-3.1-7-7-7-7 3.1-7 7c0 .9.2 1.8.5 2.6L51.9 30h-3.5V18.8h-.1c-1.3-1-2.9-1.6-4.5-1.9h-.2c-1.9-.3-3.9-.1-5.8.6-.4.1-.8.3-1.2.5h-.1c-.1.1-.2.1-.3.2-1.7 1-3 2.4-4 4 0 .1-.1.2-.1.2l-.3.6c0 .1-.1.1-.1.2v.1h-.6c-2.9 0-5.7 1.2-7.7 3.2-2.1 2-3.2 4.8-3.2 7.7 0 .7.1 1.4.2 2.1-1.3.9-2.4 2.1-3.2 3.5s-1.2 2.9-1.4 4.5c-.1 1.6.1 3.2.7 4.7s1.5 2.9 2.6 4c-.8 1.8-1.2 3.7-1.1 5.6 0 1.9.5 3.8 1.4 5.6s2.1 3.2 3.6 4.4c1.3 1 2.7 1.7 4.3 2.2v-.1q2.25.75 4.8.6h.1c0 .1.1.1.1.1.9 1.7 2.3 3 4 4 .1.1.2.1.3.2h.1c.4.2.8.4 1.2.5 1.4.6 3 .8 4.5.7.4 0 .8-.1 1.3-.1h.1c1.6-.3 3.1-.9 4.5-1.9V62.9h3.5l3.1 1.7c-.3.8-.5 1.7-.5 2.6 0 3.8 3.1 7 7 7s7-3.1 7-7-3.1-7-7-7c-1.5 0-2.8.5-3.9 1.2l-4.6-2.5h-4.6V48.7h14.3c.9 2.9 3.5 5 6.7 5 3.8 0 7-3.1 7-7s-3.1-7-7-7m-7.9-16.9c1.6 0 3 1.3 3 3s-1.3 3-3 3-3-1.3-3-3 1.4-3 3-3m0 41.4c1.6 0 3 1.3 3 3s-1.3 3-3 3-3-1.3-3-3 1.4-3 3-3M44.3 72c-.4.2-.7.3-1.1.3-.2 0-.4.1-.5.1h-.2c-.9.1-1.7 0-2.6-.3-1-.3-1.9-.9-2.7-1.7-.7-.8-1.3-1.7-1.6-2.7l-.3-1.5v-.7q0-.75.3-1.5c.1-.2.1-.4.2-.7s.3-.6.5-.9c0-.1.1-.1.1-.2.1-.1.1-.2.2-.3s.1-.2.2-.3c0 0 0-.1.1-.1l.6-.6-2.7-3.5c-1.3 1.1-2.3 2.4-2.9 3.9-.2.4-.4.9-.5 1.3v.1c-.1.2-.1.4-.1.6-.3 1.1-.4 2.3-.3 3.4-.3 0-.7 0-1-.1-2.2-.4-4.2-1.5-5.5-3.2-1.4-1.7-2-3.9-1.8-6.1q.15-1.2.6-2.4l.3-.6c.1-.2.2-.4.3-.5 0 0 0-.1.1-.1.4-.7.9-1.3 1.5-1.9 1.6-1.5 3.8-2.3 6-2.3q1.05 0 2.1.3v-4.5c-.7-.1-1.4-.2-2.1-.2-1.8 0-3.5.4-5.2 1.1-.7.3-1.3.6-1.9 1s-1.1.8-1.7 1.3c-.3.2-.5.5-.8.8-.6-.8-1-1.6-1.3-2.6-.2-1-.2-2 0-2.9.2-1 .6-1.9 1.3-2.6.6-.8 1.4-1.4 2.3-1.8l1.8-.9-.7-1.9c-.4-1-.5-2.1-.4-3.1s.5-2.1 1.1-2.9q.9-1.35 2.4-2.1c.9-.5 2-.8 3-.7.5 0 1 .1 1.5.2 1 .2 1.8.7 2.6 1.3s1.4 1.4 1.8 2.3l4.1-1.5c-.9-2-2.3-3.7-4.2-4.9q-.6-.3-.9-.6c.4-.7 1-1.4 1.6-1.9.8-.7 1.8-1.1 2.9-1.3.9-.2 1.7-.1 2.6 0 .4.1.7.2 1.1.3V72zm25-22.3c-1.6 0-3-1.3-3-3 0-1.6 1.3-3 3-3s3 1.3 3 3c0 1.6-1.3 3-3 3"
-                />
-              </symbol>
-              <use href="#ai:local:agents" />
-            </svg>
+              <X size={18} />
+            </Button>
           </div>
 
-          <div className="flex-1">
-            <h2 className="font-semibold text-base">AI Chat Agent</h2>
+          <div className="p-4">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium mb-2">Settings</h3>
+                <div className="flex items-center justify-between bg-neutral-100 dark:bg-neutral-800 p-3 rounded-md">
+                  <div className="flex items-center gap-2">
+                    {theme === "dark" ? <Moon size={16} /> : <Sun size={16} />}
+                    <span className="text-sm">Theme</span>
+                  </div>
+                  <Toggle
+                    toggled={theme === "dark"}
+                    aria-label="Toggle theme"
+                    onClick={toggleTheme}
+                  />
+                </div>
+                <div className="flex items-center justify-between bg-neutral-100 dark:bg-neutral-800 p-3 rounded-md mt-2">
+                  <div className="flex items-center gap-2">
+                    <Bug size={16} />
+                    <span className="text-sm">Debug Mode</span>
+                  </div>
+                  <Toggle
+                    toggled={showDebug}
+                    aria-label="Toggle debug mode"
+                    onClick={() => setShowDebug((prev) => !prev)}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-medium mb-2">Available Tools</h3>
+                <ul className="space-y-2">
+                  <li className="bg-neutral-100 dark:bg-neutral-800 p-3 rounded-md text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[#F48120]">•</span>
+                      <span>Booking Management</span>
+                      <div className="ml-auto text-xs text-gray-500 dark:text-gray-400 flex flex-col">
+                        <span>Create</span>
+                        <span>Update</span>
+                        <span>View</span>
+                      </div>
+                    </div>
+                  </li>
+                  <li className="bg-neutral-100 dark:bg-neutral-800 p-3 rounded-md text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[#F48120]">•</span>
+                      <span>Task Scheduling</span>
+                      <div className="ml-auto text-xs text-gray-500 dark:text-gray-400 flex flex-col">
+                        <span>Schedule</span>
+                        <span>View</span>
+                        <span>Cancel</span>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="pt-4 mt-4 border-t border-neutral-200 dark:border-neutral-800">
+                <Button
+                  variant="ghost"
+                  size="md"
+                  className="w-full justify-start text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300"
+                  onClick={clearHistory}
+                >
+                  <Trash size={16} className="mr-2" />
+                  Clear conversation
+                </Button>
+              </div>
+            </div>
           </div>
-
-          <div className="flex items-center gap-2 mr-2">
-            <Bug size={16} />
-            <Toggle
-              toggled={showDebug}
-              aria-label="Toggle debug mode"
-              onClick={() => setShowDebug((prev) => !prev)}
-            />
-          </div>
-
-          <Button
-            variant="ghost"
-            size="md"
-            shape="square"
-            className="rounded-full h-9 w-9"
-            onClick={toggleTheme}
-          >
-            {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="md"
-            shape="square"
-            className="rounded-full h-9 w-9"
-            onClick={clearHistory}
-          >
-            <Trash size={20} />
-          </Button>
         </div>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24 max-h-[calc(100vh-10rem)]">
-          {agentMessages.length === 0 && (
-            <div className="h-full flex items-center justify-center">
-              <Card className="p-6 max-w-md mx-auto bg-neutral-100 dark:bg-neutral-900">
-                <div className="text-center space-y-4">
-                  <div className="bg-[#F48120]/10 text-[#F48120] rounded-full p-3 inline-flex">
-                    <Robot size={24} />
-                  </div>
-                  <h3 className="font-semibold text-lg">Welcome to AI Chat</h3>
-                  <p className="text-muted-foreground text-sm">
-                    Start a conversation with your AI assistant. Try asking
-                    about:
-                  </p>
-                  <ul className="text-sm text-left space-y-2">
-                    <li className="flex items-center gap-2">
-                      <span className="text-[#F48120]">•</span>
-                      <span>Weather information for any city</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="text-[#F48120]">•</span>
-                      <span>Local time in different locations</span>
-                    </li>
-                  </ul>
-                </div>
-              </Card>
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col h-full max-h-screen overflow-hidden">
+          {/* Header */}
+          <div className="h-16 px-4 flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800">
+            <div className="flex items-center">
+              <Button
+                variant="ghost"
+                size="sm"
+                shape="square"
+                className="rounded-full mr-2 lg:hidden"
+                onClick={toggleDrawer}
+              >
+                <List size={20} />
+              </Button>
+              <h2 className="font-semibold text-sm sm:text-base">Mymediset Chat</h2>
             </div>
-          )}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                shape="square"
+                className="rounded-full"
+                onClick={clearHistory}
+              >
+                <Trash size={18} />
+              </Button>
+            </div>
+          </div>
 
-          {agentMessages.map((m: Message, index) => {
-            const isUser = m.role === "user";
-            const showAvatar =
-              index === 0 || agentMessages[index - 1]?.role !== m.role;
-            const showRole = showAvatar && !isUser;
+          {/* Messages Area */}
+          <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4 pb-20 sm:pb-24">
+            {agentMessages.length === 0 && (
+              <div className="h-full flex items-center justify-center">
+                <Card className="p-4 sm:p-6 max-w-[90%] sm:max-w-md mx-auto bg-neutral-100 dark:bg-neutral-900">
+                  <div className="text-center space-y-4">
+                    <div className="bg-[#F48120]/10 text-[#F48120] rounded-full p-2 sm:p-3 inline-flex">
+                      <Robot size={20} className="sm:w-6 sm:h-6" />
+                    </div>
+                    <h3 className="font-semibold text-base sm:text-lg">Welcome to Mymediset Chat</h3>
+                    <p className="text-muted-foreground text-xs sm:text-sm">
+                      Your personal assistant at your service. Try asking about:
+                    </p>
+                    <ul className="text-xs sm:text-sm text-left space-y-2">
+                      <li className="flex items-center gap-2">
+                        <span className="text-[#F48120]">•</span>
+                        <span>Create or update bookings</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <span className="text-[#F48120]">•</span>
+                        <span>Schedule tasks for later</span>
+                      </li>
+                    </ul>
+                  </div>
+                </Card>
+              </div>
+            )}
 
-            return (
-              <div key={m.id}>
-                {showDebug && (
-                  <pre className="text-xs text-muted-foreground overflow-scroll">
-                    {JSON.stringify(m, null, 2)}
-                  </pre>
-                )}
-                <div
-                  className={`flex ${isUser ? "justify-end" : "justify-start"}`}
-                >
+            {agentMessages.map((m: Message, index) => {
+              const isUser = m.role === "user";
+              const showAvatar =
+                index === 0 || agentMessages[index - 1]?.role !== m.role;
+              const showRole = showAvatar && !isUser;
+
+              return (
+                <div key={m.id}>
+                  {showDebug && (
+                    <pre className="text-xs text-muted-foreground overflow-scroll">
+                      {JSON.stringify(m, null, 2)}
+                    </pre>
+                  )}
                   <div
-                    className={`flex gap-2 max-w-[85%] ${
-                      isUser ? "flex-row-reverse" : "flex-row"
-                    }`}
+                    className={`flex ${isUser ? "justify-end" : "justify-start"}`}
                   >
-                    {showAvatar && !isUser ? (
-                      <Avatar username={"AI"} />
-                    ) : (
-                      !isUser && <div className="w-8" />
-                    )}
+                    <div
+                      className={`flex gap-1 sm:gap-2 max-w-[90%] sm:max-w-[85%] ${
+                        isUser ? "flex-row-reverse" : "flex-row"
+                      }`}
+                    >
+                      {showAvatar && !isUser ? (
+                        <Avatar username={"AI"} />
+                      ) : (
+                        !isUser && <div className="w-6 sm:w-8" />
+                      )}
 
-                    <div>
                       <div>
-                        {m.parts?.map((part, i) => {
-                          if (part.type === "text") {
-                            return (
-                              // biome-ignore lint/suspicious/noArrayIndexKey: it's fine here
-                              <div key={i}>
-                                <Card
-                                  className={`p-3 rounded-md bg-neutral-100 dark:bg-neutral-900 ${
-                                    isUser
-                                      ? "rounded-br-none"
-                                      : "rounded-bl-none border-assistant-border"
-                                  } ${
-                                    part.text.startsWith("scheduled message")
-                                      ? "border-accent/50"
-                                      : ""
-                                  } relative`}
-                                >
-                                  {part.text.startsWith(
-                                    "scheduled message"
-                                  ) && (
-                                    <span className="absolute -top-3 -left-2 text-base">
-                                      🕒
-                                    </span>
-                                  )}
-                                  <p className="text-sm whitespace-pre-wrap">
-                                    {part.text.replace(
-                                      /^scheduled message: /,
-                                      ""
+                        <div>
+                          {m.parts?.map((part, i) => {
+                            if (part.type === "text") {
+                              return (
+                                // biome-ignore lint/suspicious/noArrayIndexKey: it's fine here
+                                <div key={i}>
+                                  <Card
+                                    className={`p-2 sm:p-3 rounded-md bg-neutral-100 dark:bg-neutral-900 ${
+                                      isUser
+                                        ? "rounded-br-none"
+                                        : "rounded-bl-none border-assistant-border"
+                                    } ${
+                                      part.text.startsWith("scheduled message")
+                                        ? "border-accent/50"
+                                        : ""
+                                    } relative`}
+                                  >
+                                    {part.text.startsWith(
+                                      "scheduled message"
+                                    ) && (
+                                      <span className="absolute -top-3 -left-2 text-base">
+                                        🕒
+                                      </span>
+                                    )}
+                                    {part.text.startsWith("scheduled message") ? (
+                                      <p className="text-xs sm:text-sm whitespace-pre-wrap">
+                                        {part.text.replace(
+                                          /^scheduled message: /,
+                                          ""
+                                        )}
+                                      </p>
+                                    ) : (
+                                      <div className="prose dark:prose-invert prose-xs sm:prose-sm max-w-none">
+                                        {/* @ts-ignore - TypeScript issues with ReactMarkdown components */}
+                                        <ReactMarkdown 
+                                          children={part.text}
+                                          components={{
+                                            code: ({children}) => {
+                                              return (
+                                                <code className="bg-gray-800 text-white px-1 py-0.5 rounded">
+                                                  {children}
+                                                </code>
+                                              );
+                                            },
+                                            img: ({src, alt}) => {
+                                              return (
+                                                <img 
+                                                  src={src} 
+                                                  alt={alt || ''} 
+                                                  className="rounded-md max-w-full my-2"
+                                                  loading="lazy"
+                                                />
+                                              );
+                                            }
+                                          }}
+                                        />
+                                      </div>
+                                    )}
+                                  </Card>
+                                  <p
+                                    className={`text-[10px] sm:text-xs text-muted-foreground mt-1 ${
+                                      isUser ? "text-right" : "text-left"
+                                    }`}
+                                  >
+                                    {formatTime(
+                                      new Date(m.createdAt as unknown as string)
                                     )}
                                   </p>
-                                </Card>
-                                <p
-                                  className={`text-xs text-muted-foreground mt-1 ${
-                                    isUser ? "text-right" : "text-left"
-                                  }`}
-                                >
-                                  {formatTime(
-                                    new Date(m.createdAt as unknown as string)
-                                  )}
-                                </p>
-                              </div>
-                            );
-                          }
+                                </div>
+                              );
+                            }
 
-                          if (part.type === "tool-invocation") {
-                            const toolInvocation = part.toolInvocation;
-                            const toolCallId = toolInvocation.toolCallId;
+                            if (part.type === "tool-invocation") {
+                              const toolInvocation = part.toolInvocation;
+                              const toolCallId = toolInvocation.toolCallId;
 
-                            if (
-                              toolsRequiringConfirmation.includes(
-                                toolInvocation.toolName as keyof typeof tools
-                              ) &&
-                              toolInvocation.state === "call"
-                            ) {
-                              return (
-                                <Card
-                                  // biome-ignore lint/suspicious/noArrayIndexKey: it's fine here
-                                  key={i}
-                                  className="p-4 my-3 rounded-md bg-neutral-100 dark:bg-neutral-900"
-                                >
-                                  <div className="flex items-center gap-2 mb-3">
-                                    <div className="bg-[#F48120]/10 p-1.5 rounded-full">
-                                      <Robot
-                                        size={16}
-                                        className="text-[#F48120]"
-                                      />
+                              if (
+                                toolsRequiringConfirmation.includes(
+                                  toolInvocation.toolName as keyof typeof tools
+                                ) &&
+                                toolInvocation.state === "call"
+                              ) {
+                                return (
+                                  <Card
+                                    // biome-ignore lint/suspicious/noArrayIndexKey: it's fine here
+                                    key={i}
+                                    className="p-3 sm:p-4 my-2 sm:my-3 rounded-md bg-neutral-100 dark:bg-neutral-900"
+                                  >
+                                    <div className="flex items-center gap-2 mb-3">
+                                      <div className="bg-[#F48120]/10 p-1.5 rounded-full">
+                                        <Robot
+                                          size={16}
+                                          className="text-[#F48120]"
+                                        />
+                                      </div>
+                                      <h4 className="font-medium text-sm sm:text-base">
+                                        {toolInvocation.toolName}
+                                      </h4>
                                     </div>
-                                    <h4 className="font-medium">
-                                      {toolInvocation.toolName}
-                                    </h4>
-                                  </div>
 
-                                  <div className="mb-3">
-                                    <h5 className="text-xs font-medium mb-1 text-muted-foreground">
-                                      Arguments:
-                                    </h5>
-                                    <pre className="bg-background/80 p-2 rounded-md text-xs overflow-auto">
-                                      {JSON.stringify(
-                                        toolInvocation.args,
-                                        null,
-                                        2
-                                      )}
-                                    </pre>
-                                  </div>
+                                    <div className="mb-3">
+                                      <h5 className="text-[10px] sm:text-xs font-medium mb-1 text-muted-foreground">
+                                        Arguments:
+                                      </h5>
+                                      <pre className="bg-background/80 p-1.5 sm:p-2 rounded-md text-[10px] sm:text-xs overflow-auto">
+                                        {JSON.stringify(
+                                          toolInvocation.args,
+                                          null,
+                                          2
+                                        )}
+                                      </pre>
+                                    </div>
 
-                                  <div className="flex gap-2 justify-end">
-                                    <Button
-                                      variant="primary"
-                                      size="sm"
-                                      onClick={() =>
-                                        addToolResult({
-                                          toolCallId,
-                                          result: APPROVAL.NO,
-                                        })
-                                      }
-                                    >
-                                      Reject
-                                    </Button>
-                                    <Tooltip content={"Accept action"}>
+                                    <div className="flex gap-2 justify-end">
                                       <Button
                                         variant="primary"
                                         size="sm"
+                                        className="text-xs"
                                         onClick={() =>
                                           addToolResult({
                                             toolCallId,
-                                            result: APPROVAL.YES,
+                                            result: APPROVAL.NO,
                                           })
                                         }
                                       >
-                                        Approve
+                                        Reject
                                       </Button>
-                                    </Tooltip>
-                                  </div>
-                                </Card>
-                              );
+                                      <Tooltip content={"Accept action"}>
+                                        <Button
+                                          variant="primary"
+                                          size="sm"
+                                          className="text-xs"
+                                          onClick={() =>
+                                            addToolResult({
+                                              toolCallId,
+                                              result: APPROVAL.YES,
+                                            })
+                                          }
+                                        >
+                                          Approve
+                                        </Button>
+                                      </Tooltip>
+                                    </div>
+                                  </Card>
+                                );
+                              }
+                              return null;
                             }
                             return null;
-                          }
-                          return null;
-                        })}
+                          })}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input Area */}
-        <form
-          onSubmit={(e) =>
-            handleAgentSubmit(e, {
-              data: {
-                annotations: {
-                  hello: "world",
-                },
-              },
-            })
-          }
-          className="p-3 bg-input-background absolute bottom-0 left-0 right-0 z-10 border-t border-neutral-300 dark:border-neutral-800"
-        >
-          <div className="flex items-center gap-2">
-            <div className="flex-1 relative">
-              <Input
-                disabled={pendingToolCallConfirmation}
-                placeholder={
-                  pendingToolCallConfirmation
-                    ? "Please respond to the tool confirmation above..."
-                    : "Type your message..."
-                }
-                className="pl-4 pr-10 py-2 w-full rounded-full"
-                value={agentInput}
-                onChange={handleAgentInputChange}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleAgentSubmit(e as unknown as React.FormEvent);
-                  }
-                }}
-                onValueChange={undefined}
-              />
-            </div>
-
-            <Button
-              type="submit"
-              shape="square"
-              className="rounded-full h-10 w-10 flex-shrink-0"
-              disabled={pendingToolCallConfirmation || !agentInput.trim()}
-            >
-              <PaperPlaneRight size={16} />
-            </Button>
+              );
+            })}
+            <div ref={messagesEndRef} />
           </div>
-        </form>
+
+          {/* Input Area */}
+          <form
+            onSubmit={(e) =>
+              handleAgentSubmit(e, {
+                data: {
+                  annotations: {
+                    hello: "world",
+                  },
+                },
+              })
+            }
+            className="p-2 sm:p-3 bg-input-background border-t border-neutral-200 dark:border-neutral-800"
+          >
+            <div className="flex items-center gap-2">
+              <div className="flex-1 relative">
+                <Input
+                  disabled={pendingToolCallConfirmation}
+                  placeholder={
+                    pendingToolCallConfirmation
+                      ? "Please respond to the tool confirmation above..."
+                      : "Type your message..."
+                  }
+                  className="pl-3 sm:pl-4 pr-8 sm:pr-10 py-1.5 sm:py-2 w-full rounded-full text-sm"
+                  value={agentInput}
+                  onChange={handleAgentInputChange}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleAgentSubmit(e as unknown as React.FormEvent);
+                    }
+                  }}
+                  onValueChange={undefined}
+                />
+              </div>
+
+              <Button
+                type="submit"
+                shape="square"
+                className="rounded-full h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0"
+                disabled={pendingToolCallConfirmation || !agentInput.trim()}
+              >
+                <PaperPlaneRight size={16} />
+              </Button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

@@ -11,16 +11,18 @@ import {
   unstable_scheduleSchema,
 } from "agents/schedule";
 
-/**
- * Weather information tool that requires human confirmation
- * When invoked, this will present a confirmation dialog to the user
- * The actual implementation is in the executions object below
- */
-const getWeatherInformation = tool({
-  description: "show the weather in a given city to the user",
-  parameters: z.object({ city: z.string() }),
-  // Omitting execute function makes this tool require human confirmation
-});
+// Import booking tools from the dedicated file
+import { 
+  getBookingInformation, 
+  getAllBookings, 
+  createBooking,
+  bookingExecutions,
+  getBookingTypes,
+  getCustomers,
+  getShipToAddresses,
+  getMaterials,
+  updateBooking,
+} from "./tools/bookingTools";
 
 /**
  * Local time tool that executes automatically
@@ -123,11 +125,18 @@ const cancelScheduledTask = tool({
  * These will be provided to the AI model to describe available capabilities
  */
 export const tools = {
-  getWeatherInformation,
   getLocalTime,
+  getBookingInformation,
+  getAllBookings,
+  createBooking,
   scheduleTask,
   getScheduledTasks,
   cancelScheduledTask,
+  getBookingTypes,
+  getCustomers,
+  getShipToAddresses,
+  getMaterials,
+  updateBooking,
 };
 
 /**
@@ -136,8 +145,6 @@ export const tools = {
  * Each function here corresponds to a tool above that doesn't have an execute function
  */
 export const executions = {
-  getWeatherInformation: async ({ city }: { city: string }) => {
-    console.log(`Getting weather information for ${city}`);
-    return `The weather in ${city} is sunny`;
-  },
+  // Include booking executions from booking tools file
+  ...bookingExecutions,
 };

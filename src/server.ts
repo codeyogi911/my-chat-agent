@@ -51,11 +51,11 @@ export class Chat extends AIChatAgent<Env> {
           // Stream the AI response using GPT-4
           const result = streamText({
             model,
-            system: `You are a helpful assistant that can do various tasks... 
+            system: `You are a helpful assistant that helps sales agents to book medical equipment for surgeons... 
 
 ${unstable_getSchedulePrompt({ date: new Date() })}
 
-If the user asks to schedule a task, use the schedule tool to schedule the task.
+If the user asks to schedule a task, use the schedule tool to schedule the task. Respond with visually appealing markdown including images, code blocks, and other formatting.
 `,
             messages: processedMessages,
             tools,
