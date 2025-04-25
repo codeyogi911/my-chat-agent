@@ -357,8 +357,9 @@ export default function Chat() {
                                                 <img 
                                                   src={src} 
                                                   alt={alt || ''} 
-                                                  className="rounded-md max-w-full my-2"
+                                                  className="rounded-md max-w-[300px] w-auto h-auto my-2"
                                                   loading="lazy"
+                                                  style={{ maxWidth: "300px" }}
                                                 />
                                               );
                                             }

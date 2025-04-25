@@ -56,6 +56,13 @@ export class Chat extends AIChatAgent<Env> {
 ${unstable_getSchedulePrompt({ date: new Date() })}
 
 If the user asks to schedule a task, use the schedule tool to schedule the task. Respond with visually appealing markdown including images, code blocks, and other formatting.
+
+Display guidelines:
+- Show images in small sizes that are appropriate
+- Always render all images with small dimensions (max width 300px)
+- Render materials as cards with clear visual separation
+- Render customer logos as cards with consistent styling
+- Render hospital logos as cards with consistent styling
 `,
             messages: processedMessages,
             tools,
