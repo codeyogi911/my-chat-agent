@@ -28,12 +28,27 @@ import {
   List,
   X,
   Info,
+  CircleNotch,
 } from "@phosphor-icons/react";
 
 // List of tools that require human confirmation
 const toolsRequiringConfirmation: (keyof typeof tools)[] = [
   "createBooking",
   "updateBooking",
+];
+
+// Loading messages to show while the model is thinking
+const loadingMessages = [
+  "Thinking...",
+  "Processing your request...",
+  "Analyzing information...",
+  "Searching for relevant data...",
+  "Generating response...",
+  "Considering options...",
+  "Preparing answer...",
+  "Checking available tools...",
+  "Formulating response...",
+  "Almost there..."
 ];
 
 export default function Chat() {
@@ -45,6 +60,7 @@ export default function Chat() {
   const [showDebug, setShowDebug] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -85,15 +101,36 @@ export default function Chat() {
     handleSubmit: handleAgentSubmit,
     addToolResult,
     clearHistory,
+    isLoading,
   } = useAgentChat({
     agent,
     maxSteps: 5,
   });
 
+  // Cycle through loading messages when isLoading is true
+  useEffect(() => {
+    if (isLoading) {
+      const interval = setInterval(() => {
+        setLoadingMessageIndex(prev => 
+          prev === loadingMessages.length - 1 ? 0 : prev + 1
+        );
+      }, 2000);
+      
+      return () => clearInterval(interval);
+    } else {
+      setLoadingMessageIndex(0);
+    }
+  }, [isLoading]);
+
   // Scroll to bottom when messages change
   useEffect(() => {
     agentMessages.length > 0 && scrollToBottom();
   }, [agentMessages, scrollToBottom]);
+
+  // Also scroll when loading state changes
+  useEffect(() => {
+    isLoading && scrollToBottom();
+  }, [isLoading, scrollToBottom]);
 
   const pendingToolCallConfirmation = agentMessages.some((m: Message) =>
     m.parts?.some(
@@ -254,7 +291,7 @@ export default function Chat() {
 
           {/* Messages Area */}
           <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4 pb-20 sm:pb-24">
-            {agentMessages.length === 0 && (
+            {agentMessages.length === 0 && !isLoading && (
               <div className="h-full flex items-center justify-center">
                 <Card className="p-4 sm:p-6 max-w-[90%] sm:max-w-md mx-auto bg-neutral-100 dark:bg-neutral-900">
                   <div className="text-center space-y-4">
@@ -466,6 +503,27 @@ export default function Chat() {
                 </div>
               );
             })}
+
+            {/* Loading animation with rotating message */}
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="flex gap-2 max-w-[85%] flex-row">
+                  <Avatar username={"AI"} />
+                  <div>
+                    <Card className="p-3 rounded-md bg-neutral-100 dark:bg-neutral-900 rounded-bl-none border-assistant-border">
+                      <div className="flex items-center gap-2">
+                        <CircleNotch size={16} className="animate-spin text-[#F48120]" />
+                        <p className="text-sm">{loadingMessages[loadingMessageIndex]}</p>
+                      </div>
+                    </Card>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {formatTime(new Date())}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div ref={messagesEndRef} />
           </div>
 
@@ -485,10 +543,12 @@ export default function Chat() {
             <div className="flex items-center gap-2">
               <div className="flex-1 relative">
                 <Input
-                  disabled={pendingToolCallConfirmation}
+                  disabled={pendingToolCallConfirmation || isLoading}
                   placeholder={
                     pendingToolCallConfirmation
                       ? "Please respond to the tool confirmation above..."
+                      : isLoading
+                      ? "Waiting for response..."
                       : "Type your message..."
                   }
                   className="pl-3 sm:pl-4 pr-8 sm:pr-10 py-1.5 sm:py-2 w-full rounded-full text-sm"
@@ -508,7 +568,7 @@ export default function Chat() {
                 type="submit"
                 shape="square"
                 className="rounded-full h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0"
-                disabled={pendingToolCallConfirmation || !agentInput.trim()}
+                disabled={pendingToolCallConfirmation || isLoading || !agentInput.trim()}
               >
                 <PaperPlaneRight size={16} />
               </Button>
