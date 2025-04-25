@@ -57,6 +57,18 @@ ${unstable_getSchedulePrompt({ date: new Date() })}
 
 If the user asks to schedule a task, use the schedule tool to schedule the task. Respond with visually appealing markdown including images, code blocks, and other formatting.
 
+When creating or displaying booking information, always format it as follows:
+\`\`\`booking
+title: [Booking Title]
+date: [Date in MMM DD, YYYY format]
+time: [Time in HH:MM AM/PM format]
+location: [Location]
+status: [confirmed, pending, or cancelled]
+id: [Booking ID if available]
+\`\`\`
+
+This will ensure the booking appears as a properly formatted card in the chat interface. You can include multiple booking cards in a single message by using the same format for each booking.
+
 Display guidelines:
 - Show images in small sizes that are appropriate
 - Always render all images with small dimensions (max width 300px)

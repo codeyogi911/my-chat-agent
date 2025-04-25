@@ -16,6 +16,11 @@ import { Input } from "@/components/input/Input";
 import { Avatar } from "@/components/avatar/Avatar";
 import { Toggle } from "@/components/toggle/Toggle";
 import { Tooltip } from "@/components/tooltip/Tooltip";
+import { 
+  ChatBookingCard, 
+  parseBookingInfo, 
+  removeBookingsFromText, 
+} from "@/components/booking/ChatBookingCard";
 
 // Icon imports
 import {
@@ -27,8 +32,17 @@ import {
   Trash,
   List,
   X,
-  Info,
 } from "@phosphor-icons/react";
+
+// BookingCard component
+interface BookingInfo {
+  id?: string;
+  title: string;
+  date: string;
+  time?: string;
+  location?: string;
+  status?: string;
+}
 
 // List of tools that require human confirmation
 const toolsRequiringConfirmation: (keyof typeof tools)[] = [
@@ -406,6 +420,10 @@ export default function Chat() {
                         <div>
                           {m.parts?.map((part, i) => {
                             if (part.type === "text") {
+                              // Check if the text contains booking information
+                              const bookings = parseBookingInfo(part.text);
+                              const textWithoutBookings = removeBookingsFromText(part.text);
+                              
                               return (
                                 // biome-ignore lint/suspicious/noArrayIndexKey: it's fine here
                                 <div key={i}>
@@ -438,7 +456,7 @@ export default function Chat() {
                                       <div className={`prose ${isUser ? 'dark:prose-invert' : 'dark:prose-invert'} prose-xs sm:prose-sm max-w-none`}>
                                         {/* @ts-ignore - TypeScript issues with ReactMarkdown components */}
                                         <ReactMarkdown 
-                                          children={part.text}
+                                          children={textWithoutBookings}
                                           components={{
                                             code: ({children}) => {
                                               return (
@@ -460,6 +478,14 @@ export default function Chat() {
                                             }
                                           }}
                                         />
+                                        
+                                        {bookings.length > 0 && (
+                                          <div className="mt-3">
+                                            {bookings.map((booking, idx) => (
+                                              <ChatBookingCard key={idx} booking={booking} />
+                                            ))}
+                                          </div>
+                                        )}
                                       </div>
                                     )}
                                   </Card>
@@ -571,9 +597,11 @@ export default function Chat() {
                   </div>
                   <div>
                     <Card className="p-3 rounded-md bg-transparent rounded-bl-none border border-neutral-200 dark:border-neutral-800">
-                      <p className="text-sm font-medium text-[rgb(0,104,120)] text-pulsate">
-                        {loadingMessages[loadingMessageIndex]}
-                      </p>
+                      <div>
+                        <p className="text-sm font-medium text-[rgb(0,104,120)] text-pulsate">
+                          {loadingMessages[loadingMessageIndex]}
+                        </p>
+                      </div>
                     </Card>
                     <p className="text-xs text-muted-foreground mt-1">
                       {formatTime(new Date())}

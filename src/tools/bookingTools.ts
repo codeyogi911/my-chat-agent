@@ -53,7 +53,8 @@ export const getAllBookings = tool({
       // Build query parameters
       const params: Record<string, string | number | undefined> = {
         '$top': limit,
-        '$skip': offset
+        '$skip': offset,
+        '$expand': '*'
       };
       
       if (status) {
