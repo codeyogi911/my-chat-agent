@@ -24,6 +24,12 @@ import {
   updateBooking,
 } from "./tools/bookingTools";
 
+// Import user info tools from the dedicated file
+import {
+  getUserLoginStatus,
+  getUserInfo,
+} from "./tools/userInfoTools";
+
 /**
  * Local time tool that executes automatically
  * Since it includes an execute function, it will run without user confirmation
@@ -137,6 +143,8 @@ export const tools = {
   getShipToAddresses,
   getMaterials,
   updateBooking,
+  getUserLoginStatus,
+  getUserInfo,
 };
 
 /**
