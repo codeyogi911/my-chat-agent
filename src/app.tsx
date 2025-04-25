@@ -271,7 +271,7 @@ export default function Chat() {
                 <ul className="space-y-2">
                   <li className="bg-neutral-100 dark:bg-neutral-800 p-3 rounded-md text-sm">
                     <div className="flex items-center gap-2">
-                      <span className="text-[#F48120]">•</span>
+                      <span className="text-[rgb(0,104,120)]">•</span>
                       <span>Booking Management</span>
                       <div className="ml-auto text-xs text-gray-500 dark:text-gray-400 flex flex-col">
                         <span>Create</span>
@@ -282,7 +282,7 @@ export default function Chat() {
                   </li>
                   <li className="bg-neutral-100 dark:bg-neutral-800 p-3 rounded-md text-sm">
                     <div className="flex items-center gap-2">
-                      <span className="text-[#F48120]">•</span>
+                      <span className="text-[rgb(0,104,120)]">•</span>
                       <span>Task Scheduling</span>
                       <div className="ml-auto text-xs text-gray-500 dark:text-gray-400 flex flex-col">
                         <span>Schedule</span>
@@ -347,26 +347,26 @@ export default function Chat() {
               <div className="h-full flex items-center justify-center">
                 <Card className="p-6 sm:p-8 max-w-[90%] sm:max-w-md mx-auto bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
                   <div className="text-center space-y-5">
-                    <div className="bg-[#F48120]/10 text-[#F48120] rounded-full p-3 inline-flex mx-auto mb-2">
+                    <div className="bg-[rgb(0,104,120)]/10 text-[rgb(0,104,120)] rounded-full p-3 inline-flex mx-auto mb-2">
                       <Robot weight="duotone" size={24} className="animate-pulse" />
                     </div>
-                    <h3 className="font-semibold text-lg sm:text-xl text-[#F48120]">Welcome to Mymediset Chat</h3>
+                    <h3 className="font-semibold text-lg sm:text-xl text-[rgb(0,104,120)]">Welcome to Mymediset Chat</h3>
                     <p className="text-muted-foreground text-sm mx-auto max-w-xs">
                       Your personal assistant at your service. Try asking about:
                     </p>
                     <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4 mx-auto max-w-xs">
                       <ul className="text-sm text-left space-y-3">
                         <li className="flex items-center gap-3 group">
-                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#F48120]/10 flex items-center justify-center">
-                            <span className="text-[#F48120] text-xs group-hover:scale-110 transition-transform">→</span>
+                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[rgb(0,104,120)]/10 flex items-center justify-center">
+                            <span className="text-[rgb(0,104,120)] text-xs group-hover:scale-110 transition-transform">→</span>
                           </span>
-                          <span className="text-neutral-700 dark:text-neutral-300 group-hover:text-[#F48120] transition-colors">Create or update bookings</span>
+                          <span className="text-neutral-700 dark:text-neutral-300 group-hover:text-[rgb(0,104,120)] transition-colors">Create or update bookings</span>
                         </li>
                         <li className="flex items-center gap-3 group">
-                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#F48120]/10 flex items-center justify-center">
-                            <span className="text-[#F48120] text-xs group-hover:scale-110 transition-transform">→</span>
+                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[rgb(0,104,120)]/10 flex items-center justify-center">
+                            <span className="text-[rgb(0,104,120)] text-xs group-hover:scale-110 transition-transform">→</span>
                           </span>
-                          <span className="text-neutral-700 dark:text-neutral-300 group-hover:text-[#F48120] transition-colors">Schedule tasks for later</span>
+                          <span className="text-neutral-700 dark:text-neutral-300 group-hover:text-[rgb(0,104,120)] transition-colors">Schedule tasks for later</span>
                         </li>
                       </ul>
                     </div>
@@ -410,10 +410,10 @@ export default function Chat() {
                                 // biome-ignore lint/suspicious/noArrayIndexKey: it's fine here
                                 <div key={i}>
                                   <Card
-                                    className={`p-2 sm:p-3 rounded-md bg-neutral-100 dark:bg-neutral-900 ${
+                                    className={`p-2 sm:p-3 rounded-md ${
                                       isUser
-                                        ? "rounded-br-none"
-                                        : "rounded-bl-none border-assistant-border"
+                                        ? "rounded-br-none bg-neutral-100 dark:bg-neutral-900"
+                                        : "rounded-bl-none border-assistant-border bg-transparent border border-neutral-200 dark:border-neutral-800"
                                     } ${
                                       part.text.startsWith("scheduled message")
                                         ? "border-accent/50"
@@ -435,14 +435,14 @@ export default function Chat() {
                                         )}
                                       </p>
                                     ) : (
-                                      <div className="prose dark:prose-invert prose-xs sm:prose-sm max-w-none">
+                                      <div className={`prose ${isUser ? 'dark:prose-invert' : 'dark:prose-invert'} prose-xs sm:prose-sm max-w-none`}>
                                         {/* @ts-ignore - TypeScript issues with ReactMarkdown components */}
                                         <ReactMarkdown 
                                           children={part.text}
                                           components={{
                                             code: ({children}) => {
                                               return (
-                                                <code className="bg-gray-800 text-white px-1 py-0.5 rounded">
+                                                <code className={`${isUser ? 'bg-neutral-300 dark:bg-neutral-600 text-neutral-900 dark:text-white border border-neutral-400 dark:border-neutral-500' : 'bg-gray-800 text-white'} px-1 py-0.5 rounded`}>
                                                   {children}
                                                 </code>
                                               );
@@ -493,10 +493,10 @@ export default function Chat() {
                                     className="p-3 sm:p-4 my-2 sm:my-3 rounded-md bg-neutral-100 dark:bg-neutral-900"
                                   >
                                     <div className="flex items-center gap-2 mb-3">
-                                      <div className="bg-[#F48120]/10 p-1.5 rounded-full">
+                                      <div className="bg-[rgb(0,104,120)]/10 p-1.5 rounded-full">
                                         <Robot
                                           size={16}
-                                          className="text-[#F48120]"
+                                          className="text-[rgb(0,104,120)]"
                                         />
                                       </div>
                                       <h4 className="font-medium text-sm sm:text-base">
@@ -570,8 +570,8 @@ export default function Chat() {
                     <Avatar username={"AI"} />
                   </div>
                   <div>
-                    <Card className="p-3 rounded-md bg-neutral-100 dark:bg-neutral-900 rounded-bl-none border-assistant-border">
-                      <p className="text-sm font-medium text-[#F48120] text-pulsate">
+                    <Card className="p-3 rounded-md bg-transparent rounded-bl-none border border-neutral-200 dark:border-neutral-800">
+                      <p className="text-sm font-medium text-[rgb(0,104,120)] text-pulsate">
                         {loadingMessages[loadingMessageIndex]}
                       </p>
                     </Card>

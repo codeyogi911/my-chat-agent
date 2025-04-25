@@ -53,6 +53,10 @@
 
   --color-blue-400: oklch(0.707 0.165 254.624);
   --color-blue-800: oklch(0.424 0.199 265.638);
+  
+  --color-teal-400: rgb(0, 104, 120);
+  --color-teal-500: rgb(0, 94, 108);
+  --color-teal-600: rgb(0, 84, 96);
 
   /* Component colors */
 
@@ -75,10 +79,10 @@
   --text-color-ob-inverted: var(--color-white);
 
   /* ob-btn */
-  --color-ob-btn-primary-bg: var(--color-neutral-750);
-  --color-ob-btn-primary-bg-hover: var(--color-neutral-850);
-  --color-ob-btn-primary-border: var(--color-neutral-500);
-  --color-ob-btn-primary-border-hover: var(--color-neutral-600);
+  --color-ob-btn-primary-bg: var(--color-teal-400);
+  --color-ob-btn-primary-bg-hover: var(--color-teal-500);
+  --color-ob-btn-primary-border: var(--color-teal-500);
+  --color-ob-btn-primary-border-hover: var(--color-teal-600);
 
   --color-ob-btn-secondary-bg: var(--color-white);
   --color-ob-btn-secondary-bg-hover: var(--color-neutral-50);
@@ -93,7 +97,7 @@
   --color-ob-btn-destructive-border-hover: var(--color-red-500);
 
   /* Focus colors */
-  --color-ob-focus: var(--color-blue-400);
+  --color-ob-focus: var(--color-teal-400);
 }
 
 .dark {
@@ -118,10 +122,10 @@
   --text-color-ob-inverted: var(--color-neutral-900);
 
   /* ob-btn */
-  --color-ob-btn-primary-bg: var(--color-neutral-300);
-  --color-ob-btn-primary-bg-hover: var(--color-neutral-250);
-  --color-ob-btn-primary-border: var(--color-neutral-100);
-  --color-ob-btn-primary-border-hover: var(--color-white);
+  --color-ob-btn-primary-bg: var(--color-teal-400);
+  --color-ob-btn-primary-bg-hover: var(--color-teal-500);
+  --color-ob-btn-primary-border: var(--color-teal-500);
+  --color-ob-btn-primary-border-hover: var(--color-teal-600);
 
   --color-ob-btn-secondary-bg: var(--color-neutral-900);
   --color-ob-btn-secondary-bg-hover: var(--color-neutral-850);
@@ -136,7 +140,7 @@
   --color-ob-btn-destructive-border-hover: var(--color-red-600);
 
   /* Focus colors */
-  --color-ob-focus: var(--color-blue-800);
+  --color-ob-focus: var(--color-teal-400);
 }
 
 .btn {
