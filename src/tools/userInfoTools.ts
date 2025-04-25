@@ -3,6 +3,7 @@
  */
 import { tool } from "ai";
 import { z } from "zod";
+import { fetchApi, getApiConfig } from "../utils/apiUtils";
 
 /**
  * Tool to check if the user is currently logged in
@@ -13,8 +14,8 @@ export const getUserLoginStatus = tool({
   parameters: z.object({}),
   execute: async () => {
     try {
-      // Get API base URL and auth token from environment variables
-      const authToken = process.env.AUTH_TOKEN || "";
+      // Get auth token from environment variables using the utility function
+      const { authToken } = getApiConfig();
       
       // Simple check: if auth token exists, consider the user logged in
       const isLoggedIn = !!authToken && authToken.length > 0;
@@ -45,11 +46,9 @@ export const getUserInfo = tool({
   parameters: z.object({}),
   execute: async () => {
     try {
-      // Get API base URL and auth token from environment variables
-      const authToken = process.env.AUTH_TOKEN || "";
-      const authHeaderName = process.env.AUTH_HEADER_NAME || "x-approuter-authorization";
-      const baseUrl = process.env.API_BASE_URL || "https://mymediset-xba-dev-eu10.dev.mymediset.cloud/catalog/BookingService";
-      const userInfoUrl = `${baseUrl}/user-api/currentUser`;
+      // Get API config using the utility function
+      const { authToken, baseUrl } = getApiConfig();
+      const userInfoUrl = `user-api/currentUser`;
       
       // Check if user is logged in
       const isLoggedIn = !!authToken && authToken.length > 0;
@@ -74,25 +73,25 @@ export const getUserInfo = tool({
         };
       }
       
-      // Fetch detailed user info from the backend
-      const response = await fetch(userInfoUrl, {
-        headers: {
-          [authHeaderName]: authToken
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch user info: ${response.status}`);
+      // Fetch detailed user info using the utility function
+      try {
+        const userInfo = await fetchApi(userInfoUrl);
+        
+        return {
+          success: true,
+          message: "Successfully retrieved user information.",
+          isLoggedIn: true,
+          user: userInfo
+        };
+      } catch (error) {
+        // Return logged in but couldn't fetch detailed info
+        return {
+          success: false,
+          message: `Failed to retrieve user information: ${error}`,
+          isLoggedIn: true,
+          error: String(error)
+        };
       }
-      
-      const userInfo = await response.json();
-      
-      return {
-        success: true,
-        message: "Successfully retrieved user information.",
-        isLoggedIn: true,
-        user: userInfo
-      };
     } catch (error) {
       console.error(`Error getting user info: ${error}`);
       return {

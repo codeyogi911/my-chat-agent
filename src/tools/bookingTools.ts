@@ -3,6 +3,7 @@
  */
 import { tool } from "ai";
 import { z } from "zod";
+import { fetchApi, fetchApiWithParams, getApiConfig } from "../utils/apiUtils";
 
 /**
  * Booking information tool that executes automatically
@@ -18,24 +19,13 @@ export const getBookingInformation = tool({
     console.log(`Fetching booking information for booking ID: ${bookingId}, isActiveEntity: ${isActiveEntity}`);
     
     try {
-      // Get API base URL and auth token from environment variables
-      const baseUrl = process.env.API_BASE_URL || "https://mymediset-xba-dev-eu10.dev.mymediset.cloud/catalog/BookingService";
-      const authToken = process.env.AUTH_TOKEN || "";
-      const authHeaderName = process.env.AUTH_HEADER_NAME || "x-approuter-authorization";
-
       const queryParams = new URLSearchParams();
       queryParams.append('$expand', '*');
       
-      // Construct API endpoint for specific booking
-      const url = `${baseUrl}/Bookings(ID=${bookingId},IsActiveEntity=${isActiveEntity})?${queryParams.toString()}`;
-      
-      // Make the API call
-      const response = await fetch(url, {
-        headers: {
-          [authHeaderName]: authToken
-        }
-      });
-      const bookingInfo = await response.json();
+      // Use fetchApiWithParams for the API call
+      const bookingInfo = await fetchApi(
+        `Bookings(ID=${bookingId},IsActiveEntity=${isActiveEntity})?${queryParams.toString()}`
+      );
       
       return bookingInfo;
     } catch (error) {
@@ -60,28 +50,19 @@ export const getAllBookings = tool({
     console.log(`Fetching all bookings with limit: ${limit}, offset: ${offset}, status: ${status}`);
     
     try {
-      // Get API base URL and auth token from environment variables
-      const baseUrl = process.env.API_BASE_URL || "https://mymediset-xba-dev-eu10.dev.mymediset.cloud/catalog/BookingService";
-      const authToken = process.env.AUTH_TOKEN || "";
-      const authHeaderName = process.env.AUTH_HEADER_NAME || "x-approuter-authorization";
-      
       // Build query parameters
-      const queryParams = new URLSearchParams();
-      if (limit) queryParams.append('$top', limit.toString());
-      if (offset) queryParams.append('$skip', offset.toString());
-      if (status) queryParams.append('$filter', `status eq '${status}'`);
+      const params: Record<string, string | number | undefined> = {
+        '$top': limit,
+        '$skip': offset
+      };
       
-      // Construct URL with query parameters
-      const url = `${baseUrl}/Bookings?${queryParams.toString()}`;
+      if (status) {
+        params['$filter'] = `status eq '${status}'`;
+      }
       
-      // Make the API call
-      const response = await fetch(url, {
-        headers: {
-          [authHeaderName]: authToken
-        }
-      });
+      // Use fetchApiWithParams for the API call
+      const bookings = await fetchApiWithParams('Bookings', params);
       
-      const bookings = await response.json();
       return bookings;
     } catch (error) {
       console.error(`Error fetching all bookings: ${error}`);
@@ -101,22 +82,9 @@ export const getBookingTypes = tool({
     console.log(`Fetching all booking types`);
     
     try {
-      // Get API base URL and auth token from environment variables
-      const baseUrl = process.env.API_BASE_URL || "https://mymediset-xba-dev-eu10.dev.mymediset.cloud/catalog/BookingService";
-      const authToken = process.env.AUTH_TOKEN || "";
-      const authHeaderName = process.env.AUTH_HEADER_NAME || "x-approuter-authorization";
+      // Use fetchApi for the API call
+      const bookingTypes = await fetchApi('BookingTypes');
       
-      // Construct URL for booking types
-      const url = `${baseUrl}/BookingTypes`;
-      
-      // Make the API call
-      const response = await fetch(url, {
-        headers: {
-          [authHeaderName]: authToken
-        }
-      });
-      
-      const bookingTypes = await response.json();
       return bookingTypes;
     } catch (error) {
       console.error(`Error fetching booking types: ${error}`);
@@ -140,29 +108,19 @@ export const getCustomers = tool({
     console.log(`Fetching customers with limit: ${limit}, offset: ${offset}, search: ${search}`);
     
     try {
-      // Get API base URL and auth token from environment variables
-      const baseUrl = process.env.API_BASE_URL || "https://mymediset-xba-dev-eu10.dev.mymediset.cloud/catalog/BookingService";
-      const authToken = process.env.AUTH_TOKEN || "";
-      const authHeaderName = process.env.AUTH_HEADER_NAME || "x-approuter-authorization";
-      
       // Build query parameters
-      const queryParams = new URLSearchParams();
-      if (limit) queryParams.append('$top', limit.toString());
-      if (offset) queryParams.append('$skip', offset.toString());
-      if (search) queryParams.append('$search', search);
+      const params: Record<string, string | number | undefined> = {
+        '$top': limit,
+        '$skip': offset
+      };
       
-      // Construct URL for customers
-      // Note: The actual endpoint may need to be adjusted based on the API structure
-      const url = `${baseUrl}/Customers?${queryParams.toString()}`;
+      if (search) {
+        params['$search'] = search;
+      }
       
-      // Make the API call
-      const response = await fetch(url, {
-        headers: {
-          [authHeaderName]: authToken
-        }
-      });
+      // Use fetchApiWithParams for the API call
+      const customers = await fetchApiWithParams('Customers', params);
       
-      const customers = await response.json();
       return customers;
     } catch (error) {
       console.error(`Error fetching customers: ${error}`);
@@ -187,34 +145,24 @@ export const getShipToAddresses = tool({
     console.log(`Fetching shipping addresses with limit: ${limit}, offset: ${offset}, search: ${search}, customerId: ${customerId}`);
     
     try {
-      // Get API base URL and auth token from environment variables
-      const baseUrl = process.env.API_BASE_URL || "https://mymediset-xba-dev-eu10.dev.mymediset.cloud/catalog/BookingService";
-      const authToken = process.env.AUTH_TOKEN || "";
-      const authHeaderName = process.env.AUTH_HEADER_NAME || "x-approuter-authorization";
-      
       // Build query parameters
-      const queryParams = new URLSearchParams();
-      if (limit) queryParams.append('$top', limit.toString());
-      if (offset) queryParams.append('$skip', offset.toString());
-      if (search) queryParams.append('$search', search);
+      const params: Record<string, string | number | undefined> = {
+        '$top': limit,
+        '$skip': offset
+      };
+      
+      if (search) {
+        params['$search'] = search;
+      }
       
       // Add filter for customer ID if provided
       if (customerId) {
-        queryParams.append('$filter', `soldTo_ID eq '${customerId}'`);
+        params['$filter'] = `soldTo_ID eq '${customerId}'`;
       }
       
-      // Construct URL for shipping addresses
-      // Note: The actual endpoint may need to be adjusted based on the API structure
-      const url = `${baseUrl}/BusinessPartners?${queryParams.toString()}`;
+      // Use fetchApiWithParams for the API call
+      const shipToAddresses = await fetchApiWithParams('BusinessPartners', params);
       
-      // Make the API call
-      const response = await fetch(url, {
-        headers: {
-          [authHeaderName]: authToken
-        }
-      });
-      
-      const shipToAddresses = await response.json();
       return shipToAddresses;
     } catch (error) {
       console.error(`Error fetching shipping addresses: ${error}`);
@@ -239,35 +187,24 @@ export const getMaterials = tool({
     console.log(`Fetching materials with limit: ${limit}, offset: ${offset}, search: ${search}, category: ${category}`);
     
     try {
-      // Get API base URL and auth token from environment variables
-      const baseUrl = process.env.API_BASE_URL || "https://mymediset-xba-dev-eu10.dev.mymediset.cloud/catalog/BookingService";
-      const authToken = process.env.AUTH_TOKEN || "";
-      const authHeaderName = process.env.AUTH_HEADER_NAME || "x-approuter-authorization";
-      
       // Build query parameters
-      const queryParams = new URLSearchParams();
-      if (limit) queryParams.append('$top', limit.toString());
-      if (offset) queryParams.append('$skip', offset.toString());
-      if (search) queryParams.append('$search', search);
+      const params: Record<string, string | number | undefined> = {
+        '$top': limit,
+        '$skip': offset
+      };
+      
+      if (search) {
+        params['$search'] = search;
+      }
       
       // Add filter for category if provided
       if (category) {
-        queryParams.append('$filter', `category eq '${category}'`);
+        params['$filter'] = `category eq '${category}'`;
       }
       
-      // Construct URL for materials
-      // Note: The actual endpoint may need to be adjusted based on the API structure
-      const url = `${baseUrl}/Materials?${queryParams.toString()}`;
+      // Use fetchApiWithParams for the API call
+      const materials = await fetchApiWithParams('Materials', params);
       
-      // Make the API call
-      const response = await fetch(url, {
-        headers: {
-          [authHeaderName]: authToken
-        }
-      });
-      
-      const materials = await response.json();
-      console.log(`Materials: ${JSON.stringify(materials)}`);
       return materials;
     } catch (error) {
       console.error(`Error fetching materials: ${error}`);
@@ -341,11 +278,6 @@ export const bookingExecutions = {
     console.log(`Creating booking for customer ID: ${soldTo_ID}, ship to ID: ${shipTo_ID}, type: ${bookingType}, delivery date: ${requestedDeliveryDate}`);
     
     try {
-      // Get API base URL and auth token from environment variables
-      const baseUrl = process.env.API_BASE_URL || "https://mymediset-xba-dev-eu10.dev.mymediset.cloud/catalog/BookingService";
-      const authToken = process.env.AUTH_TOKEN || "";
-      const authHeaderName = process.env.AUTH_HEADER_NAME || "x-approuter-authorization";
-      
       // Construct the booking data
       const bookingData = {
         soldTo_ID,
@@ -356,22 +288,15 @@ export const bookingExecutions = {
         items: bookingItems
       };
       
-      // Make the API call to create the booking
-      const response = await fetch(`${baseUrl}/Bookings`, {
+      // Use fetchApi for the API call
+      const newBooking = await fetchApi('Bookings', {
         method: 'POST',
         headers: {
-          [authHeaderName]: authToken,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(bookingData)
-      });
-      console.log(`Response: ${JSON.stringify(response)}`);
+      }) as { id?: string, [key: string]: any };
       
-      if (!response.ok) {
-        throw new Error(`Server responded with status: ${response.status}`);
-      }
-      
-      const newBooking = await response.json() as { id?: string, [key: string]: any };
       return {
         success: true,
         message: `Booking successfully created for customer ID: ${soldTo_ID}`,
@@ -407,23 +332,8 @@ export const bookingExecutions = {
     console.log(`Updating booking ID: ${bookingId}, isActiveEntity: ${isActiveEntity}`);
     
     try {
-      // Get API base URL and auth token from environment variables
-      const baseUrl = process.env.API_BASE_URL || "https://mymediset-xba-dev-eu10.dev.mymediset.cloud/catalog/BookingService";
-      const authToken = process.env.AUTH_TOKEN || "";
-      const authHeaderName = process.env.AUTH_HEADER_NAME || "x-approuter-authorization";
-      
       // First, get the current booking to update only changed fields
-      const getResponse = await fetch(`${baseUrl}/Bookings(ID=${bookingId},IsActiveEntity=${isActiveEntity})`, {
-        headers: {
-          [authHeaderName]: authToken
-        }
-      });
-      
-      if (!getResponse.ok) {
-        throw new Error(`Error retrieving booking: ${getResponse.status}`);
-      }
-      
-      const currentBooking = await getResponse.json();
+      const currentBooking = await fetchApi(`Bookings(ID=${bookingId},IsActiveEntity=${isActiveEntity})`);
       
       // Construct the booking update data with only changed fields
       const updateData: any = {};
@@ -435,19 +345,14 @@ export const bookingExecutions = {
       if (bookingItems) updateData.items = bookingItems;
       if (isActiveEntity !== undefined) updateData.IsActiveEntity = isActiveEntity;
       
-      // Make the API call to update the booking
-      const updateResponse = await fetch(`${baseUrl}/Bookings(ID=${bookingId},IsActiveEntity=${isActiveEntity})`, {
+      // Use fetchApi for the API call
+      await fetchApi(`Bookings(ID=${bookingId},IsActiveEntity=${isActiveEntity})`, {
         method: 'PATCH',
         headers: {
-          [authHeaderName]: authToken,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(updateData)
       });
-      
-      if (!updateResponse.ok) {
-        throw new Error(`Server responded with status: ${updateResponse.status}`);
-      }
       
       return {
         success: true,
