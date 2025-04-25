@@ -136,7 +136,7 @@ export default function Chat() {
         >
           <div className="flex items-center justify-between h-16 px-4 border-b border-neutral-200 dark:border-neutral-800">
             <div className="flex items-center">
-              <img src={mymLogo} alt="MYM Logo" className="h-8 mr-2" />
+              {/* Logo removed */}
             </div>
             <Button
               variant="ghost"
