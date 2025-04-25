@@ -28,7 +28,6 @@ import {
   List,
   X,
   Info,
-  CircleNotch,
 } from "@phosphor-icons/react";
 
 // List of tools that require human confirmation
@@ -50,6 +49,48 @@ const loadingMessages = [
   "Formulating response...",
   "Almost there..."
 ];
+
+// Define CSS animations
+const pulseAnimation = `
+  @keyframes pulsate {
+    0% {
+      opacity: 0.6;
+      transform: scale(0.98);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    100% {
+      opacity: 0.6;
+      transform: scale(0.98);
+    }
+  }
+
+  .text-pulsate {
+    animation: pulsate 1.5s ease-in-out infinite;
+    display: inline-block;
+  }
+
+  .avatar-pulsate {
+    animation: pulsate 1.5s ease-in-out infinite;
+  }
+
+  .loading-dots::after {
+    content: "...";
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: bottom;
+    animation: dots-animation 1.5s steps(4, end) infinite;
+    width: 0;
+  }
+
+  @keyframes dots-animation {
+    to {
+      width: 1.25em;
+    }
+  }
+`;
 
 export default function Chat() {
   const [theme, setTheme] = useState<"dark" | "light">(() => {
@@ -79,6 +120,17 @@ export default function Chat() {
     // Save theme preference to localStorage
     localStorage.setItem("theme", theme);
   }, [theme]);
+
+  // Add animation styles to head on mount
+  useEffect(() => {
+    const styleElement = document.createElement('style');
+    styleElement.innerHTML = pulseAnimation;
+    document.head.appendChild(styleElement);
+
+    return () => {
+      document.head.removeChild(styleElement);
+    };
+  }, []);
 
   // Scroll to bottom on mount
   useEffect(() => {
@@ -293,25 +345,31 @@ export default function Chat() {
           <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4 pb-20 sm:pb-24">
             {agentMessages.length === 0 && !isLoading && (
               <div className="h-full flex items-center justify-center">
-                <Card className="p-4 sm:p-6 max-w-[90%] sm:max-w-md mx-auto bg-neutral-100 dark:bg-neutral-900">
-                  <div className="text-center space-y-4">
-                    <div className="bg-[#F48120]/10 text-[#F48120] rounded-full p-2 sm:p-3 inline-flex">
-                      <Robot size={20} className="sm:w-6 sm:h-6" />
+                <Card className="p-6 sm:p-8 max-w-[90%] sm:max-w-md mx-auto bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
+                  <div className="text-center space-y-5">
+                    <div className="bg-[#F48120]/10 text-[#F48120] rounded-full p-3 inline-flex mx-auto mb-2">
+                      <Robot weight="duotone" size={24} className="animate-pulse" />
                     </div>
-                    <h3 className="font-semibold text-base sm:text-lg">Welcome to Mymediset Chat</h3>
-                    <p className="text-muted-foreground text-xs sm:text-sm">
+                    <h3 className="font-semibold text-lg sm:text-xl text-[#F48120]">Welcome to Mymediset Chat</h3>
+                    <p className="text-muted-foreground text-sm mx-auto max-w-xs">
                       Your personal assistant at your service. Try asking about:
                     </p>
-                    <ul className="text-xs sm:text-sm text-left space-y-2">
-                      <li className="flex items-center gap-2">
-                        <span className="text-[#F48120]">•</span>
-                        <span>Create or update bookings</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <span className="text-[#F48120]">•</span>
-                        <span>Schedule tasks for later</span>
-                      </li>
-                    </ul>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4 mx-auto max-w-xs">
+                      <ul className="text-sm text-left space-y-3">
+                        <li className="flex items-center gap-3 group">
+                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#F48120]/10 flex items-center justify-center">
+                            <span className="text-[#F48120] text-xs group-hover:scale-110 transition-transform">→</span>
+                          </span>
+                          <span className="text-neutral-700 dark:text-neutral-300 group-hover:text-[#F48120] transition-colors">Create or update bookings</span>
+                        </li>
+                        <li className="flex items-center gap-3 group">
+                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#F48120]/10 flex items-center justify-center">
+                            <span className="text-[#F48120] text-xs group-hover:scale-110 transition-transform">→</span>
+                          </span>
+                          <span className="text-neutral-700 dark:text-neutral-300 group-hover:text-[#F48120] transition-colors">Schedule tasks for later</span>
+                        </li>
+                      </ul>
+                    </div>
                   </div>
                 </Card>
               </div>
@@ -504,17 +562,18 @@ export default function Chat() {
               );
             })}
 
-            {/* Loading animation with rotating message */}
+            {/* Loading animation with pulsating text */}
             {isLoading && (
               <div className="flex justify-start">
                 <div className="flex gap-2 max-w-[85%] flex-row">
-                  <Avatar username={"AI"} />
+                  <div className="avatar-pulsate">
+                    <Avatar username={"AI"} />
+                  </div>
                   <div>
                     <Card className="p-3 rounded-md bg-neutral-100 dark:bg-neutral-900 rounded-bl-none border-assistant-border">
-                      <div className="flex items-center gap-2">
-                        <CircleNotch size={16} className="animate-spin text-[#F48120]" />
-                        <p className="text-sm">{loadingMessages[loadingMessageIndex]}</p>
-                      </div>
+                      <p className="text-sm font-medium text-[#F48120] text-pulsate">
+                        {loadingMessages[loadingMessageIndex]}
+                      </p>
                     </Card>
                     <p className="text-xs text-muted-foreground mt-1">
                       {formatTime(new Date())}
