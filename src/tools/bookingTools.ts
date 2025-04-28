@@ -1,5 +1,5 @@
 /**
- * Booking-related tools for the AI chat agent
+ * Booking-related tools for the mymediset chat
  */
 import { tool } from "ai";
 import { z } from "zod";

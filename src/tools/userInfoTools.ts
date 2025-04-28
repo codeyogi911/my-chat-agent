@@ -1,5 +1,5 @@
 /**
- * User info tools for the AI chat agent
+ * User info tools for the mymediset chat
  */
 import { tool } from "ai";
 import { z } from "zod";

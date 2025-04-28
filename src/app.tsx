@@ -356,7 +356,7 @@ export default function Chat() {
           </div>
 
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4 pb-20 sm:pb-24">
+          <div className="flex-1 overflow-y-auto p-1 sm:p-2 space-y-3 sm:space-y-4 pb-20 sm:pb-24">
             {agentMessages.length === 0 && !isLoading && (
               <div className="h-full flex items-center justify-center">
                 <Card className="p-6 sm:p-8 max-w-[90%] sm:max-w-md mx-auto bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
@@ -406,7 +406,7 @@ export default function Chat() {
                     className={`flex ${isUser ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`flex gap-1 sm:gap-2 max-w-[90%] sm:max-w-[85%] ${
+                      className={`flex gap-1 sm:gap-2 max-w-[98%] sm:max-w-[98%] ${
                         isUser ? "flex-row-reverse" : "flex-row"
                       }`}
                     >
@@ -428,7 +428,7 @@ export default function Chat() {
                                 // biome-ignore lint/suspicious/noArrayIndexKey: it's fine here
                                 <div key={i}>
                                   <Card
-                                    className={`p-2 sm:p-3 rounded-md ${
+                                    className={`p-2 sm:p-3 rounded-md w-full ${
                                       isUser
                                         ? "rounded-br-none bg-neutral-100 dark:bg-neutral-900"
                                         : "rounded-bl-none border-assistant-border bg-transparent border border-neutral-200 dark:border-neutral-800"
@@ -591,12 +591,12 @@ export default function Chat() {
             {/* Loading animation with pulsating text */}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="flex gap-2 max-w-[85%] flex-row">
+                <div className="flex gap-2 max-w-[98%] flex-row">
                   <div className="avatar-pulsate">
                     <Avatar username={"AI"} />
                   </div>
-                  <div>
-                    <Card className="p-3 rounded-md bg-transparent rounded-bl-none border border-neutral-200 dark:border-neutral-800">
+                  <div className="w-full">
+                    <Card className="p-3 rounded-md bg-transparent rounded-bl-none border border-neutral-200 dark:border-neutral-800 w-full">
                       <div>
                         <p className="text-sm font-medium text-[rgb(0,104,120)] text-pulsate">
                           {loadingMessages[loadingMessageIndex]}

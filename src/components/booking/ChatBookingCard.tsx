@@ -1,4 +1,4 @@
-import { Calendar } from "@phosphor-icons/react";
+import { Calendar, CalendarPlus } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 
 export interface ChatBookingInfo {
@@ -87,8 +87,123 @@ export const ChatBookingCard = ({ booking }: { booking: ChatBookingInfo }) => {
     }
   }, [animationStage]);
 
+  // Handler for card click to navigate to booking URL
+  const handleCardClick = () => {
+    if (booking.id) {
+      const baseUrl = "https://mymediset-xba-dev-eu10.launchpad.cfapps.eu10.hana.ondemand.com/site?siteId=04bd86f5-c383-41a9-966a-c97d7744a8ea#cloudmymedisetuibookings-manage?sap-ui-app-id-hint=mymediset_cloud.mymediset.uibookings&/Bookings";
+      const bookingUrl = `${baseUrl}(${booking.id})`;
+      window.open(bookingUrl, "_blank");
+    }
+  };
+
+  // Handler for calendar button click
+  const handleAddToCalendar = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click event
+    
+    // Create calendar event data
+    const eventTitle = booking.title;
+    const eventLocation = booking.location || "";
+    
+    // Parse date and time
+    let startDate: Date | null = null;
+    let endDate: Date | null = null;
+    
+    try {
+      // Parse date string (assuming format like "January 1, 2023" or "2023-01-01")
+      const dateObj = new Date(booking.date);
+      
+      // If time is provided, parse it (assuming format like "10:00 AM")
+      if (booking.time) {
+        const [timePart, period] = booking.time.split(' ');
+        let [hours, minutes] = timePart.split(':').map(Number);
+        
+        // Handle AM/PM if present
+        if (period && period.toLowerCase() === 'pm' && hours < 12) {
+          hours += 12;
+        } else if (period && period.toLowerCase() === 'am' && hours === 12) {
+          hours = 0;
+        }
+        
+        dateObj.setHours(hours, minutes || 0, 0);
+      }
+      
+      if (!isNaN(dateObj.getTime())) {
+        startDate = dateObj;
+        
+        // Set end time 1 hour later if not specified
+        endDate = new Date(dateObj);
+        endDate.setHours(endDate.getHours() + 1);
+      }
+    } catch (error) {
+      console.error("Error parsing date/time:", error);
+    }
+    
+    if (!startDate || !endDate) {
+      alert("Unable to parse booking date/time");
+      return;
+    }
+    
+    // Create calendar event based on device type
+    const userAgent = navigator.userAgent.toLowerCase();
+    
+    if (userAgent.match(/iphone|ipad|ipod/i)) {
+      // iOS devices - create ics file and use data URI
+      createICalendarEvent(eventTitle, startDate, endDate, eventLocation);
+    } else if (userAgent.match(/android/i)) {
+      // Android devices - use intent URI
+      const formattedStart = formatDateForAndroid(startDate);
+      const formattedEnd = formatDateForAndroid(endDate);
+      const intentUrl = `intent://com.android.calendar/addevent?title=${encodeURIComponent(eventTitle)}&begin=${formattedStart}&end=${formattedEnd}&location=${encodeURIComponent(eventLocation)}#Intent;scheme=content;action=android.intent.action.INSERT;end`;
+      window.location.href = intentUrl;
+    } else {
+      // Desktop or unknown - create .ics file for download
+      createICalendarEvent(eventTitle, startDate, endDate, eventLocation);
+    }
+  };
+  
+  // Helper to create iCalendar event
+  const createICalendarEvent = (title: string, start: Date, end: Date, location: string) => {
+    // Format dates to iCalendar format (YYYYMMDDTHHMMSSZ)
+    const formatDate = (date: Date) => {
+      return date.toISOString().replace(/-|:|\.\d+/g, '');
+    };
+    
+    const icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      'BEGIN:VEVENT',
+      `SUMMARY:${title}`,
+      `DTSTART:${formatDate(start)}`,
+      `DTEND:${formatDate(end)}`,
+      `LOCATION:${location}`,
+      `DESCRIPTION:${title}`,
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n');
+    
+    // Create data URI and trigger download
+    const dataUri = 'data:text/calendar;charset=utf8,' + encodeURIComponent(icsContent);
+    
+    const link = document.createElement('a');
+    link.href = dataUri;
+    link.download = `${title.replace(/\s+/g, '_')}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  
+  // Helper to format date for Android intent
+  const formatDateForAndroid = (date: Date) => {
+    return Math.floor(date.getTime() / 1000);
+  };
+
   return (
-    <div className="bg-white dark:bg-neutral-800 rounded-md border border-neutral-200 dark:border-neutral-700 shadow-sm my-2">
+    <div 
+      className="bg-white dark:bg-neutral-800 rounded-md border border-neutral-200 dark:border-neutral-700 shadow-sm my-2 cursor-pointer hover:shadow-md transition-shadow"
+      onClick={handleCardClick}
+    >
       <div className="p-3">
         <div className="flex items-center gap-2 mb-2">
           <Calendar size={16} className={`text-[rgb(0,104,120)] fade-in`} />
@@ -105,6 +220,14 @@ export const ChatBookingCard = ({ booking }: { booking: ChatBookingInfo }) => {
               {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
             </span>
           )}
+          <button 
+            className="ml-2 p-1.5 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+            onClick={handleAddToCalendar}
+            title="Add to calendar"
+            aria-label="Add to calendar"
+          >
+            <CalendarPlus size={16} className="text-[rgb(0,104,120)]" />
+          </button>
         </div>
         <div className="grid grid-cols-1 gap-1 text-xs text-neutral-600 dark:text-neutral-300">
           <div className={`flex items-center fade-in ${animationStage >= 2 ? '' : 'opacity-0'} delay-200`}>
