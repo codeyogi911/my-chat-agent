@@ -16,11 +16,17 @@ import { Input } from "@/components/input/Input";
 import { Avatar } from "@/components/avatar/Avatar";
 import { Toggle } from "@/components/toggle/Toggle";
 import { Tooltip } from "@/components/tooltip/Tooltip";
+import { TextShimmer } from "@/components/text/text-shimmer";
 import { 
   ChatBookingCard, 
   parseBookingInfo, 
   removeBookingsFromText, 
 } from "@/components/booking/ChatBookingCard";
+import {
+  ChatMaterialCard,
+  parseMaterialInfo,
+  removeMaterialsFromText,
+} from "@/components/material/ChatMaterialCard";
 
 // Icon imports
 import {
@@ -79,15 +85,6 @@ const pulseAnimation = `
       opacity: 0.6;
       transform: scale(0.98);
     }
-  }
-
-  .text-pulsate {
-    animation: pulsate 1.5s ease-in-out infinite;
-    display: inline-block;
-  }
-
-  .avatar-pulsate {
-    animation: pulsate 1.5s ease-in-out infinite;
   }
 
   .loading-dots::after {
@@ -217,6 +214,28 @@ export default function Chat() {
     setDrawerOpen(!drawerOpen);
   };
 
+  // Find active tool if any
+  const getActiveToolName = () => {
+    if (!isLoading) return null;
+    
+    // Check last few messages for any tool invocation
+    const recentMessages = [...agentMessages].reverse().slice(0, 3);
+    
+    for (const message of recentMessages) {
+      if (message.role === "assistant" && message.parts) {
+        for (const part of message.parts) {
+          if (part.type === "tool-invocation" && part.toolInvocation.state === "call") {
+            return part.toolInvocation.toolName;
+          }
+        }
+      }
+    }
+    
+    return null;
+  };
+
+  const activeToolName = getActiveToolName();
+
   return (
     <div className="h-screen w-full flex flex-col bg-fixed overflow-hidden bg-white dark:bg-gray-950">
       <HasOpenAIKey />
@@ -225,22 +244,20 @@ export default function Chat() {
       <div className="flex flex-1 h-full overflow-hidden">
         {/* Overlay for mobile */}
         {drawerOpen && (
-          <div 
+          <div
             className="fixed inset-0 bg-black/20 dark:bg-black/50 z-20 lg:hidden"
             onClick={toggleDrawer}
           />
         )}
 
         {/* Drawer/Sidebar */}
-        <div 
+        <div
           className={`fixed lg:fixed w-64 h-full z-30 transform transition-transform duration-300 ease-in-out ${
             drawerOpen ? "translate-x-0" : "-translate-x-full"
           } bg-neutral-50 dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-800 shadow-lg`}
         >
           <div className="flex items-center justify-between h-16 px-4 border-b border-neutral-200 dark:border-neutral-800">
-            <div className="flex items-center">
-              {/* Logo removed */}
-            </div>
+            <div className="flex items-center">{/* Logo removed */}</div>
             <Button
               variant="ghost"
               size="sm"
@@ -279,7 +296,7 @@ export default function Chat() {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <h3 className="text-sm font-medium mb-2">Available Tools</h3>
                 <ul className="space-y-2">
@@ -291,6 +308,17 @@ export default function Chat() {
                         <span>Create</span>
                         <span>Update</span>
                         <span>View</span>
+                      </div>
+                    </div>
+                  </li>
+                  <li className="bg-neutral-100 dark:bg-neutral-800 p-3 rounded-md text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[rgb(0,104,120)]">•</span>
+                      <span>Materials Management</span>
+                      <div className="ml-auto text-xs text-gray-500 dark:text-gray-400 flex flex-col">
+                        <span>Track</span>
+                        <span>View</span>
+                        <span>Update</span>
                       </div>
                     </div>
                   </li>
@@ -324,7 +352,9 @@ export default function Chat() {
         </div>
 
         {/* Main Content Area */}
-        <div className={`flex-1 flex flex-col h-full max-h-screen overflow-hidden ${!drawerOpen ? "lg:ml-0" : "lg:ml-64"}`}>
+        <div
+          className={`flex-1 flex flex-col h-full max-h-screen overflow-hidden ${!drawerOpen ? "lg:ml-0" : "lg:ml-64"}`}
+        >
           {/* Header */}
           <div className="h-16 px-4 flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800">
             <div className="flex items-center">
@@ -339,7 +369,9 @@ export default function Chat() {
               </Button>
               <div className="flex items-center">
                 <img src={mymLogo} alt="MYM Logo" className="h-5" />
-                <span className="ml-2 font-semibold text-sm sm:text-base">Chat</span>
+                <span className="ml-2 font-semibold text-sm sm:text-base">
+                  Chat
+                </span>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -362,9 +394,13 @@ export default function Chat() {
                 <Card className="p-6 sm:p-8 max-w-[90%] sm:max-w-md mx-auto bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
                   <div className="text-center space-y-5">
                     <div className="bg-[rgb(0,104,120)]/10 text-[rgb(0,104,120)] rounded-full p-3 inline-flex mx-auto mb-2">
-                      <Robot weight="duotone" size={24} className="animate-pulse" />
+                      <Robot weight="duotone" size={24} />
                     </div>
-                    <h3 className="font-semibold text-lg sm:text-xl text-[rgb(0,104,120)]">Welcome to Mymediset Chat</h3>
+                    <h3 className="font-semibold text-lg sm:text-xl text-[rgb(0,104,120)]">
+                      <TextShimmer duration={2}>
+                        Welcome to Mymediset Chat
+                      </TextShimmer>
+                    </h3>
                     <p className="text-muted-foreground text-sm mx-auto max-w-xs">
                       Your personal assistant at your service. Try asking about:
                     </p>
@@ -372,15 +408,33 @@ export default function Chat() {
                       <ul className="text-sm text-left space-y-3">
                         <li className="flex items-center gap-3 group">
                           <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[rgb(0,104,120)]/10 flex items-center justify-center">
-                            <span className="text-[rgb(0,104,120)] text-xs group-hover:scale-110 transition-transform">→</span>
+                            <span className="text-[rgb(0,104,120)] text-xs group-hover:scale-110 transition-transform">
+                              →
+                            </span>
                           </span>
-                          <span className="text-neutral-700 dark:text-neutral-300 group-hover:text-[rgb(0,104,120)] transition-colors">Create or update bookings</span>
+                          <span className="text-neutral-700 dark:text-neutral-300 group-hover:text-[rgb(0,104,120)] transition-colors">
+                            Create or update bookings
+                          </span>
                         </li>
                         <li className="flex items-center gap-3 group">
                           <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[rgb(0,104,120)]/10 flex items-center justify-center">
-                            <span className="text-[rgb(0,104,120)] text-xs group-hover:scale-110 transition-transform">→</span>
+                            <span className="text-[rgb(0,104,120)] text-xs group-hover:scale-110 transition-transform">
+                              →
+                            </span>
                           </span>
-                          <span className="text-neutral-700 dark:text-neutral-300 group-hover:text-[rgb(0,104,120)] transition-colors">Schedule tasks for later</span>
+                          <span className="text-neutral-700 dark:text-neutral-300 group-hover:text-[rgb(0,104,120)] transition-colors">
+                            Track and manage materials
+                          </span>
+                        </li>
+                        <li className="flex items-center gap-3 group">
+                          <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[rgb(0,104,120)]/10 flex items-center justify-center">
+                            <span className="text-[rgb(0,104,120)] text-xs group-hover:scale-110 transition-transform">
+                              →
+                            </span>
+                          </span>
+                          <span className="text-neutral-700 dark:text-neutral-300 group-hover:text-[rgb(0,104,120)] transition-colors">
+                            Schedule tasks for later
+                          </span>
                         </li>
                       </ul>
                     </div>
@@ -391,9 +445,12 @@ export default function Chat() {
 
             {agentMessages.map((m: Message, index) => {
               const isUser = m.role === "user";
-              const showAvatar =
-                index === 0 || agentMessages[index - 1]?.role !== m.role;
-              const showRole = showAvatar && !isUser;
+              // const isLastMessage = index === agentMessages.length - 1;
+              // // Check if this is a user message followed by an agent message
+              // const isFollowedByAgentMessage =
+              //   isUser &&
+              //   index < agentMessages.length - 1 &&
+              //   agentMessages[index + 1].role === "assistant";
 
               return (
                 <div key={m.id}>
@@ -410,20 +467,17 @@ export default function Chat() {
                         isUser ? "flex-row-reverse" : "flex-row"
                       }`}
                     >
-                      {showAvatar && !isUser ? (
-                        <Avatar username={"AI"} />
-                      ) : (
-                        !isUser && <div className="w-6 sm:w-8" />
-                      )}
+                      {/* Avatar removed */}
 
-                      <div>
+                      <div className="w-full">
                         <div>
                           {m.parts?.map((part, i) => {
                             if (part.type === "text") {
                               // Check if the text contains booking information
                               const bookings = parseBookingInfo(part.text);
-                              const textWithoutBookings = removeBookingsFromText(part.text);
-                              
+                              const textWithoutBookings =
+                                removeBookingsFromText(part.text);
+
                               return (
                                 // biome-ignore lint/suspicious/noArrayIndexKey: it's fine here
                                 <div key={i}>
@@ -445,7 +499,9 @@ export default function Chat() {
                                         🕒
                                       </span>
                                     )}
-                                    {part.text.startsWith("scheduled message") ? (
+                                    {part.text.startsWith(
+                                      "scheduled message"
+                                    ) ? (
                                       <p className="text-xs sm:text-sm whitespace-pre-wrap">
                                         {part.text.replace(
                                           /^scheduled message: /,
@@ -453,39 +509,73 @@ export default function Chat() {
                                         )}
                                       </p>
                                     ) : (
-                                      <div className={`prose ${isUser ? 'dark:prose-invert' : 'dark:prose-invert'} prose-xs sm:prose-sm max-w-none`}>
+                                      <div
+                                        className={`prose ${isUser ? "dark:prose-invert" : "dark:prose-invert"} prose-xs sm:prose-sm max-w-none`}
+                                      >
                                         {/* @ts-ignore - TypeScript issues with ReactMarkdown components */}
-                                        <ReactMarkdown 
+                                        <ReactMarkdown
                                           children={textWithoutBookings}
                                           components={{
-                                            code: ({children}) => {
+                                            code: ({ children }) => {
                                               return (
-                                                <code className={`${isUser ? 'bg-neutral-300 dark:bg-neutral-600 text-neutral-900 dark:text-white border border-neutral-400 dark:border-neutral-500' : 'bg-gray-800 text-white'} px-1 py-0.5 rounded`}>
+                                                <code
+                                                  className={`${isUser ? "bg-neutral-300 dark:bg-neutral-600 text-neutral-900 dark:text-white border border-neutral-400 dark:border-neutral-500" : "bg-gray-800 text-white"} px-1 py-0.5 rounded`}
+                                                >
                                                   {children}
                                                 </code>
                                               );
                                             },
-                                            img: ({src, alt}) => {
+                                            img: ({ src, alt }) => {
                                               return (
-                                                <img 
-                                                  src={src} 
-                                                  alt={alt || ''} 
+                                                <img
+                                                  src={src}
+                                                  alt={alt || ""}
                                                   className="rounded-md max-w-[300px] w-auto h-auto my-2"
                                                   loading="lazy"
                                                   style={{ maxWidth: "300px" }}
                                                 />
                                               );
-                                            }
+                                            },
                                           }}
                                         />
-                                        
+
                                         {bookings.length > 0 && (
                                           <div className="mt-3">
                                             {bookings.map((booking, idx) => (
-                                              <ChatBookingCard key={idx} booking={booking} />
+                                              <ChatBookingCard
+                                                key={idx}
+                                                booking={booking}
+                                              />
                                             ))}
                                           </div>
                                         )}
+
+                                        {/* Add materials rendering */}
+                                        {(() => {
+                                          // Parse materials from text
+                                          const materials = parseMaterialInfo(
+                                            part.text
+                                          );
+                                          const textWithoutAll =
+                                            removeMaterialsFromText(
+                                              textWithoutBookings
+                                            );
+
+                                          return (
+                                            materials.length > 0 && (
+                                              <div className="mt-3">
+                                                {materials.map(
+                                                  (material, idx) => (
+                                                    <ChatMaterialCard
+                                                      key={idx}
+                                                      material={material}
+                                                    />
+                                                  )
+                                                )}
+                                              </div>
+                                            )
+                                          );
+                                        })()}
                                       </div>
                                     )}
                                   </Card>
@@ -526,7 +616,12 @@ export default function Chat() {
                                         />
                                       </div>
                                       <h4 className="font-medium text-sm sm:text-base">
-                                        {toolInvocation.toolName}
+                                        <TextShimmer
+                                          className="text-[rgb(0,104,120)]"
+                                          duration={1.5}
+                                        >
+                                          {toolInvocation.toolName}
+                                        </TextShimmer>
                                       </h4>
                                     </div>
 
@@ -587,30 +682,16 @@ export default function Chat() {
                 </div>
               );
             })}
-
-            {/* Loading animation with pulsating text */}
+            {/* Loading animation showing active tool or just "Thinking..." */}
             {isLoading && (
-              <div className="flex justify-start">
-                <div className="flex gap-2 max-w-[98%] flex-row">
-                  <div className="avatar-pulsate">
-                    <Avatar username={"AI"} />
-                  </div>
-                  <div className="w-full">
-                    <Card className="p-3 rounded-md bg-transparent rounded-bl-none border border-neutral-200 dark:border-neutral-800 w-full">
-                      <div>
-                        <p className="text-sm font-medium text-[rgb(0,104,120)] text-pulsate">
-                          {loadingMessages[loadingMessageIndex]}
-                        </p>
-                      </div>
-                    </Card>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {formatTime(new Date())}
-                    </p>
-                  </div>
+              <div className="flex justify-start mt-2 mb-4">
+                <div className="w-full max-w-[98%] pl-2">
+                  <TextShimmer className="text-base font-medium" duration={1.5}>
+                    {activeToolName ? `Using ${activeToolName}...` : "Thinking..."}
+                  </TextShimmer>
                 </div>
               </div>
             )}
-
             <div ref={messagesEndRef} />
           </div>
 
@@ -625,7 +706,7 @@ export default function Chat() {
                 },
               })
             }
-            className="p-2 sm:p-3 bg-input-background border-t border-neutral-200 dark:border-neutral-800"
+            className="p-2 sm:p-3 bg-input-background border-t border-neutral-200 dark:border-neutral-800 relative"
           >
             <div className="flex items-center gap-2">
               <div className="flex-1 relative">
@@ -635,8 +716,8 @@ export default function Chat() {
                     pendingToolCallConfirmation
                       ? "Please respond to the tool confirmation above..."
                       : isLoading
-                      ? "Waiting for response..."
-                      : "Type your message..."
+                        ? "Waiting for response..."
+                        : "Type your message..."
                   }
                   className="pl-3 sm:pl-4 pr-8 sm:pr-10 py-1.5 sm:py-2 w-full rounded-full text-sm"
                   value={agentInput}
@@ -655,7 +736,9 @@ export default function Chat() {
                 type="submit"
                 shape="square"
                 className="rounded-full h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0"
-                disabled={pendingToolCallConfirmation || isLoading || !agentInput.trim()}
+                disabled={
+                  pendingToolCallConfirmation || isLoading || !agentInput.trim()
+                }
               >
                 <PaperPlaneRight size={16} />
               </Button>

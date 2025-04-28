@@ -68,6 +68,16 @@ id: [Booking ID if available]
 numberofItems: [Number of items in the booking]
 \`\`\`
 
+When creating or displaying material information, always format it as follows without any additional text because it will be used to render a material card:
+\`\`\`material
+name: [Material Name]
+quantity: [Quantity with units e.g., 5 units, 10 boxes]
+category: [Category of the material e.g., Surgical, Implant, Disposable]
+expiryDate: [Expiry Date in MMM DD, YYYY format if applicable]
+status: [Status of the material e.g., available, low-stock, expired]
+id: [Material ID if available]
+\`\`\`
+
 `,
             messages: processedMessages,
             tools,
