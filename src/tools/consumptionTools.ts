@@ -20,7 +20,7 @@ export const getConsumptionRequest = tool({
     
     try {
       // Build URL directly with proper encoding
-      let url = `ConsumptionService/ConsumptionRequests(ID=${encodeURIComponent(id)})`;
+      let url = `catalog/ConsumptionService/ConsumptionRequests(ID=${encodeURIComponent(id)})`;
       
       // Add expand parameter if provided
       if (expand.length > 0) {
@@ -57,7 +57,7 @@ export const getConsumptionRequests = tool({
     
     try {
       // Build URL directly with proper encoding
-      let url = `ConsumptionService/ConsumptionRequests?$top=${limit}&$skip=${skip}`;
+      let url = `catalog/ConsumptionService/ConsumptionRequests?$top=${limit}&$skip=${skip}`;
       
       // Add expand parameter if provided
       if (expand.length > 0) {
@@ -137,7 +137,7 @@ export const getConsumptionRequestsByStatus = tool({
     
     try {
       // Instead of URLSearchParams, build the URL manually with proper encoding
-      let url = `ConsumptionService/ConsumptionRequests?$top=${limit}&$skip=${skip}`;
+      let url = `catalog/ConsumptionService/ConsumptionRequests?$top=${limit}&$skip=${skip}`;
       
       // Add filter directly with proper encoding
       url += `&$filter=status_code eq ${encodeURIComponent(statusCode)}`;
@@ -175,7 +175,7 @@ export const getConsumptionRequestsByCustomer = tool({
     
     try {
       // Instead of URLSearchParams, build the URL manually with proper encoding
-      let url = `ConsumptionService/ConsumptionRequests?$top=${limit}&$skip=${skip}`;
+      let url = `catalog/ConsumptionService/ConsumptionRequests?$top=${limit}&$skip=${skip}`;
       
       // Add filter directly with proper encoding
       url += `&$filter=customer_ID eq ${encodeURIComponent(customerId)}`;
@@ -213,7 +213,7 @@ export const searchConsumptionRequestsByCaseRef = tool({
     
     try {
       // Instead of URLSearchParams, build the URL manually with proper encoding
-      let url = `ConsumptionService/ConsumptionRequests?$top=${limit}&$skip=${skip}`;
+      let url = `catalog/ConsumptionService/ConsumptionRequests?$top=${limit}&$skip=${skip}`;
       
       // Add filter directly with proper encoding
       const filterExpr = `contains(caseRef, '${caseRef}')`;
@@ -247,7 +247,7 @@ export const getConsumptionRequestStatusCodes = tool({
     
     try {
       // Use direct URL with no parameters
-      const statusCodes = await fetchApi(`ConsumptionService/ConsumptionRequestStatus`);
+      const statusCodes = await fetchApi(`catalog/ConsumptionService/ConsumptionRequestStatus`);
       
       return statusCodes;
     } catch (error) {
