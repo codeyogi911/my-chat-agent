@@ -30,6 +30,18 @@ import {
   getUserInfo,
 } from "./tools/userInfoTools";
 
+// Import consumption tools from the dedicated file
+import {
+  getConsumptionRequest,
+  getConsumptionRequests,
+  getConsumptionRequestsByStatus,
+  getConsumptionRequestsByCustomer,
+  searchConsumptionRequestsByCaseRef,
+  getConsumptionRequestStatusCodes,
+} from "./tools/consumptionTools";
+
+// Import jira tools from the dedicated file
+
 /**
  * Local time tool that executes automatically
  * Since it includes an execute function, it will run without user confirmation
@@ -145,6 +157,13 @@ export const tools = {
   updateBooking,
   getUserLoginStatus,
   getUserInfo,
+  // Add consumption tools
+  getConsumptionRequest,
+  getConsumptionRequests,
+  getConsumptionRequestsByStatus,
+  getConsumptionRequestsByCustomer,
+  searchConsumptionRequestsByCaseRef,
+  getConsumptionRequestStatusCodes,
 };
 
 /**

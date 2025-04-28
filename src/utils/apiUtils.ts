@@ -6,7 +6,7 @@
  * Get common API configuration from environment variables
  */
 export const getApiConfig = () => {
-  const baseUrl = process.env.API_BASE_URL || "https://mymediset-xba-dev-eu10.dev.mymediset.cloud/catalog/BookingService";
+  const baseUrl = process.env.API_BASE_URL || "https://mymediset-xba-dev-eu10.dev.mymediset.cloud";
   const authToken = process.env.AUTH_TOKEN || "";
   const authHeaderName = process.env.AUTH_HEADER_NAME || "x-approuter-authorization";
   

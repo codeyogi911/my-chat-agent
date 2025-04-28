@@ -370,7 +370,7 @@ export default function Chat() {
               <div className="flex items-center">
                 <img src={mymLogo} alt="MYM Logo" className="h-5" />
                 <span className="ml-2 font-semibold text-sm sm:text-base">
-                  Chat
+                  Agent
                 </span>
               </div>
             </div>
@@ -398,7 +398,7 @@ export default function Chat() {
                     </div>
                     <h3 className="font-semibold text-lg sm:text-xl text-[rgb(0,104,120)]">
                       <TextShimmer duration={2}>
-                        Welcome to Mymediset Chat
+                        Welcome to Mymediset Agent
                       </TextShimmer>
                     </h3>
                     <p className="text-muted-foreground text-sm mx-auto max-w-xs">
@@ -512,68 +512,64 @@ export default function Chat() {
                                       <div
                                         className={`prose ${isUser ? "dark:prose-invert" : "dark:prose-invert"} prose-xs sm:prose-sm max-w-none`}
                                       >
-                                        {/* @ts-ignore - TypeScript issues with ReactMarkdown components */}
-                                        <ReactMarkdown
-                                          children={textWithoutBookings}
-                                          components={{
-                                            code: ({ children }) => {
-                                              return (
-                                                <code
-                                                  className={`${isUser ? "bg-neutral-300 dark:bg-neutral-600 text-neutral-900 dark:text-white border border-neutral-400 dark:border-neutral-500" : "bg-gray-800 text-white"} px-1 py-0.5 rounded`}
-                                                >
-                                                  {children}
-                                                </code>
-                                              );
-                                            },
-                                            img: ({ src, alt }) => {
-                                              return (
-                                                <img
-                                                  src={src}
-                                                  alt={alt || ""}
-                                                  className="rounded-md max-w-[300px] w-auto h-auto my-2"
-                                                  loading="lazy"
-                                                  style={{ maxWidth: "300px" }}
-                                                />
-                                              );
-                                            },
-                                          }}
-                                        />
-
-                                        {bookings.length > 0 && (
-                                          <div className="mt-3">
-                                            {bookings.map((booking, idx) => (
-                                              <ChatBookingCard
-                                                key={idx}
-                                                booking={booking}
-                                              />
-                                            ))}
-                                          </div>
-                                        )}
-
-                                        {/* Add materials rendering */}
+                                        {/* Process material information first */}
                                         {(() => {
-                                          // Parse materials from text
-                                          const materials = parseMaterialInfo(
-                                            part.text
-                                          );
-                                          const textWithoutAll =
-                                            removeMaterialsFromText(
-                                              textWithoutBookings
-                                            );
-
+                                          // First remove bookings, then remove materials
+                                          const materials = parseMaterialInfo(part.text);
+                                          const textWithoutMaterials = removeMaterialsFromText(textWithoutBookings);
+                                          
+                                          // Return both the clean text and the materials info
                                           return (
-                                            materials.length > 0 && (
-                                              <div className="mt-3">
-                                                {materials.map(
-                                                  (material, idx) => (
+                                            <>
+                                              {/* @ts-ignore - TypeScript issues with ReactMarkdown components */}
+                                              <ReactMarkdown
+                                                children={textWithoutMaterials}
+                                                components={{
+                                                  code: ({ children }) => {
+                                                    return (
+                                                      <code
+                                                        className={`${isUser ? "bg-neutral-300 dark:bg-neutral-600 text-neutral-900 dark:text-white border border-neutral-400 dark:border-neutral-500" : "bg-gray-800 text-white"} px-1 py-0.5 rounded`}
+                                                      >
+                                                        {children}
+                                                      </code>
+                                                    );
+                                                  },
+                                                  img: ({ src, alt }) => {
+                                                    return (
+                                                      <img
+                                                        src={src}
+                                                        alt={alt || ""}
+                                                        className="rounded-md max-w-[300px] w-auto h-auto my-2"
+                                                        loading="lazy"
+                                                        style={{ maxWidth: "300px" }}
+                                                      />
+                                                    );
+                                                  },
+                                                }}
+                                              />
+
+                                              {bookings.length > 0 && (
+                                                <div className="mt-3">
+                                                  {bookings.map((booking, idx) => (
+                                                    <ChatBookingCard
+                                                      key={idx}
+                                                      booking={booking}
+                                                    />
+                                                  ))}
+                                                </div>
+                                              )}
+
+                                              {materials.length > 0 && (
+                                                <div className="mt-3">
+                                                  {materials.map((material, idx) => (
                                                     <ChatMaterialCard
                                                       key={idx}
                                                       material={material}
                                                     />
-                                                  )
-                                                )}
-                                              </div>
-                                            )
+                                                  ))}
+                                                </div>
+                                              )}
+                                            </>
                                           );
                                         })()}
                                       </div>

@@ -55,7 +55,7 @@ export class Chat extends AIChatAgent<Env> {
 
 ${unstable_getSchedulePrompt({ date: new Date() })}
 
-If the user asks to schedule a task, use the schedule tool to schedule the task. Respond with visually appealing markdown including images, code blocks, and other formatting.
+If the user asks to schedule a task, use the schedule tool to schedule the task.
 
 When creating or displaying booking information, always format it as follows without any additional text because it will be used to render a booking card:
 \`\`\`booking
